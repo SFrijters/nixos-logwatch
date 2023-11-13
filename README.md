@@ -7,7 +7,19 @@ Any suggestions or PR are welcome!
 
 ## Basic usage
 
-In your flake.nix: add `nixos-logwatch.nixosModules.logwatch` to your modules.
+In your flake.nix: add this flake to your inputs:
+
+```nix
+inputs = {
+  ...
+  nixos-logwatch = {
+    url = "github:SFrijters/nixos-logwatch";
+    inputs.nixpkgs.follows = "nixpkgs";  # It's probably best to follow your existing nixpkgs
+  };
+};
+```
+
+and add `nixos-logwatch.nixosModules.logwatch` to your modules.
 
 In your configuration.nix:
 
@@ -54,8 +66,12 @@ Example:
 ```
 
 ```nix
-services.logwatch.journalCtrEntries = [
-  { name = "nix-gc"; title = "Nix garbage collection"; script = "${logwatch-nix-gc-script}/bin/logwatch-nix-gc"; }
+services.logwatch.journalCtlEntries = [
+  {
+    name = "nix-gc";
+    title = "Nix garbage collection";
+    script = "${logwatch-nix-gc-script}/bin/logwatch-nix-gc";
+  }
   ...
 ];
 ```
