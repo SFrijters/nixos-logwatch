@@ -31,7 +31,7 @@ services.logwatch = {
     { name = "sshd"; }
     { name = "postfix"; output = "short"; }
     { name = "sudo"; unit = "session*"; }
-  ]
+  ];
 };
 ```
 
@@ -57,12 +57,12 @@ The option `services.logwatch.journalCtlEntries` contains attribute sets with th
 Example:
 
 ```nix
-  logwatch-nix-gc-script = pkgs.writeShellApplication {
-    name = "logwatch-nix-gc";
-    text = ''
-      cat - | grep -i "store paths deleted"
-    '';
-  };
+logwatch-nix-gc-script = pkgs.writeShellApplication {
+  name = "logwatch-nix-gc";
+  text = ''
+    cat - | grep -i "store paths deleted"
+  '';
+};
 ```
 
 ```nix
