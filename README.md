@@ -70,8 +70,10 @@ services.logwatch.journalCtlEntries = [
   {
     name = "nix-gc";
     title = "Nix garbage collection";
-    script = "${logwatch-nix-gc-script}/bin/logwatch-nix-gc";
+    script = "${lib.getExe logwatch-nix-gc-script}";
   }
   ...
 ];
 ```
+
+Some useful / example scripts are provided as packages in this flake.
