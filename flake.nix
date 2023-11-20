@@ -11,6 +11,7 @@
       let pkgs = nixpkgs.legacyPackages.${system}; in
       {
         packages = {
+          logwatch = pkgs.callPackage ./packages/logwatch.nix {};
           nix-gc-script = pkgs.callPackage ./packages/nix-gc.nix {};
           nixos-upgrade-script = pkgs.callPackage ./packages/nixos-upgrade.nix {};
         };
