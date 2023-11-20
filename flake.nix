@@ -12,8 +12,8 @@
       {
         packages = {
           logwatch = pkgs.callPackage ./packages/logwatch.nix {};
-          nix-gc-script = pkgs.callPackage ./packages/nix-gc.nix {};
-          nixos-upgrade-script = pkgs.callPackage ./packages/nixos-upgrade.nix {};
+          nix-gc-script = pkgs.callPackage ./packages/logwatch-scripts/nix-gc.nix {};
+          nixos-upgrade-script = pkgs.callPackage ./packages/logwatch-scripts/nixos-upgrade.nix {};
         };
 
       }
