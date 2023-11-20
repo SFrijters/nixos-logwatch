@@ -1,7 +1,9 @@
 { pkgs, lib, journalCtlEntries ? [], ... }:
 let
   mkJournalCtlEntry = { name, title ? null, output ? "cat", unit ? null, script ? null}:
-    "echo -e '" + lib.optionalString (title != null) ''
+    ''
+      echo Adding JournalCtl entry '${name}'
+    '' + "echo -e '" + lib.optionalString (title != null) ''
       Title = "${title}"\n
     '' + ''
       LogFile =\nLogFile = logwatch-null\n*JournalCtl = "--output=${output} --unit=${if unit != null then unit else "${name}.service"}"\n' > $out/etc/logwatch/conf/services/${name}.conf
