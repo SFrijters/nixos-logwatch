@@ -10,7 +10,7 @@ let
     '';
 in
 pkgs.stdenvNoCC.mkDerivation {
-    name = "logwatch";
+    pname = "logwatch";
     version = "unstable-2023-11-10";
 
     src = pkgs.fetchgit {
