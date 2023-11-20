@@ -10,7 +10,8 @@
     flake-utils.lib.eachDefaultSystem (system:
       let pkgs = nixpkgs.legacyPackages.${system}; in
       {
-        packages = {
+        packages = rec {
+          default = logwatch;
           logwatch = pkgs.callPackage ./packages/logwatch.nix {};
           nix-gc-script = pkgs.callPackage ./packages/logwatch-scripts/nix-gc.nix {};
           nixos-upgrade-script = pkgs.callPackage ./packages/logwatch-scripts/nixos-upgrade.nix {};
