@@ -13,12 +13,12 @@ let
 in
 pkgs.stdenvNoCC.mkDerivation {
     pname = "logwatch";
-    version = "unstable-2023-11-10";
+    version = "unstable-2023-12-21";
 
     src = pkgs.fetchgit {
       url = "https://git.code.sf.net/p/logwatch/git";
-      rev = "4a7212fb26c36b6e6946a509d988cb809b463a5e";
-      hash = "sha256-o2AflM9Pq8CWz+9IIeBMbaADFAJ/HjPZeIvgS6/61zE=";
+      rev = "59da257e881a84b5b6f7139d916d6f1367d45502";
+      hash = "sha256-wz2QdtgmgKeDM6169lSIVir5FzNsoJg+VYXmQzJQ0hk=";
     };
 
     nativeBuildInputs = [
