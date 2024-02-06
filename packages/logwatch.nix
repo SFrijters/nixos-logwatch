@@ -11,14 +11,14 @@ let
       cp ${script} $out/etc/logwatch/scripts/services/${name}
     '';
 in
-pkgs.stdenvNoCC.mkDerivation {
+pkgs.stdenvNoCC.mkDerivation rec {
     pname = "logwatch";
-    version = "unstable-2024-01-06";
+    version = "7.10";
 
     src = pkgs.fetchgit {
       url = "https://git.code.sf.net/p/logwatch/git";
-      rev = "fee92865f3f797ec4a9f07b23c5e737c55139f7d";
-      hash = "sha256-nemUvFGpKEoRHelUiHoy0/bkMduj0nZMHEJ1ZP6STCM=";
+      rev = "refs/tags/${version}";
+      hash = "sha256-MazRi5Tkssv+9nk2a1LgVcOvWZZ5T6/iwiZ+EZj+HI0=";
     };
 
     nativeBuildInputs = [
