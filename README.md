@@ -1,9 +1,13 @@
 # nixos-logwatch
 
+[![nix run](https://github.com/SFrijters/nixos-logwatch/actions/workflows/nix-run.yml/badge.svg)](https://github.com/SFrijters/nixos-logwatch/actions/workflows/nix-run.yml)
+
 This flake provides a NixOS module for [logwatch](https://sourceforge.net/projects/logwatch/).
 
 It probably does not cover all use cases, as it has been lifted out of my personal configuration.
 Any suggestions or PR are welcome!
+
+The `master` branch of this repository will package [https://sourceforge.net/p/logwatch/git/ci/7.10/tree/](tagged logwatch releases) (starting with 7.10), while the `unstable` branch will be updated more regularly following the [logwatch master branch](https://sourceforge.net/p/logwatch/git/ci/master/tree/).
 
 ## Basic usage
 
