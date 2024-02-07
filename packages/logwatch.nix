@@ -56,9 +56,11 @@ pkgs.stdenvNoCC.mkDerivation rec {
       --replace "/usr/bin/perl" "${pkgs.perl}/bin/perl" \
       --replace "/var/cache"    "/tmp"
 
-    substituteInPlace $out/usr/share/logwatch/default.conf/logwatch.conf \
-      --replace "/usr/sbin/sendmail"  "${pkgs.postfix}/bin/sendmail" \
-      --replace "/var/cache"          "/tmp"
+    {
+        echo "TmpDir = /tmp/logwatch";
+        echo "mailer = \"${pkgs.postfix}/bin/sendmail -t\"";
+        echo "MailFrom = Logwatch"
+    } >> $out/usr/share/logwatch/default.conf/logwatch.conf
 
     # Enable runtime stats
     substituteInPlace $out/usr/share/logwatch/default.conf/services/zz-runtime.conf \
