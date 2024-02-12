@@ -36,12 +36,12 @@ pkgs.stdenvNoCC.mkDerivation rec {
   patchPhase = ''
     # Fix paths
     substituteInPlace install_logwatch.sh \
-      --replace "/usr/share"      "$out/usr/share"          \
-      --replace "/etc/logwatch"   "$out/etc/logwatch"       \
-      --replace "/usr/bin/perl"   "${pkgs.perl}/bin/perl"   \
-      --replace " perl "          " ${pkgs.perl}/bin/perl " \
-      --replace "/usr/sbin"       "$out/bin"                \
-      --replace "install -m 0755 -d \$TEMPDIR" ":"
+      --replace-fail "/usr/share"      "$out/usr/share"          \
+      --replace-fail "/etc/logwatch"   "$out/etc/logwatch"       \
+      --replace-fail "/usr/bin/perl"   "${pkgs.perl}/bin/perl"   \
+      --replace-fail " perl "          " ${pkgs.perl}/bin/perl " \
+      --replace-fail "/usr/sbin"       "$out/bin"                \
+      --replace-fail "install -m 0755 -d \$TEMPDIR" ":"
   '' + lib.optionalString (tag == "") ''
     # Set version
     sed -i -e "s|^Version:.*|Version: ${rev}|" logwatch.spec
@@ -63,10 +63,10 @@ pkgs.stdenvNoCC.mkDerivation rec {
 
   postFixup = ''
     substituteInPlace $out/bin/logwatch \
-      --replace "/usr/share"    "$out/usr/share"        \
-      --replace "/etc/logwatch" "$out/etc/logwatch"     \
-      --replace "/usr/bin/perl" "${pkgs.perl}/bin/perl" \
-      --replace "/var/cache"    "/tmp"
+      --replace-fail "/usr/share"    "$out/usr/share"        \
+      --replace-fail "/etc/logwatch" "$out/etc/logwatch"     \
+      --replace-fail "/usr/bin/perl" "${pkgs.perl}/bin/perl" \
+      --replace-fail "/var/cache"    "/tmp"
 
     {
         echo "TmpDir = /tmp/logwatch";
@@ -76,11 +76,11 @@ pkgs.stdenvNoCC.mkDerivation rec {
 
     # Enable runtime stats
     substituteInPlace $out/usr/share/logwatch/default.conf/services/zz-runtime.conf \
-      --replace '#$show_uptime = 0' '$show_uptime = 1'
+      --replace-fail '#$show_uptime = 0' '$show_uptime = 1'
 
     # Do not show unmatched entries; getting all messages from journalctl unit 'session*' contains a lot more stuff than only sudo
     substituteInPlace $out/usr/share/logwatch/scripts/services/sudo \
-      --replace "if (keys %OtherList) {" "if (0) {"
+      --replace-fail "if (keys %OtherList) {" "if (0) {"
 
     wrapProgram $out/bin/logwatch \
       --prefix PERL5LIB : "${with pkgs.perlPackages; makePerlPath [ DateManip HTMLParser SysCPU SysMemInfo ]}" \
