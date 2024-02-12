@@ -19,7 +19,7 @@ let
   tag = "";
   date = "2024-02-10";
 in
-pkgs.stdenvNoCC.mkDerivation rec {
+pkgs.stdenvNoCC.mkDerivation {
   pname = "logwatch";
   version = if tag != "" then tag else "unstable-${date}";
 
