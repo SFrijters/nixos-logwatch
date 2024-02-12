@@ -14,14 +14,18 @@ let
     '' + lib.optionalString (script != null) ''
       cp ${script} $out/etc/logwatch/scripts/services/${name}
     '';
+
+  rev = "d483158a5e2f9602958e62b8371e5a75c0918b96";
+  tag = "";
+  date = "2024-02-10";
 in
 pkgs.stdenvNoCC.mkDerivation rec {
   pname = "logwatch";
-  version = "unstable-2024-02-10";
+  version = if tag != "" then tag else "unstable-${date}";
 
   src = pkgs.fetchgit {
     url = "https://git.code.sf.net/p/logwatch/git";
-    rev = "d483158a5e2f9602958e62b8371e5a75c0918b96";
+    rev = if tag != "" then "refs/tags/${tag}" else rev;
     hash = "sha256-/qWcBrpG/Lpm2i7OFQ6SOfJJhEM6SvGDBAwwAMViT2w=";
   };
 
@@ -30,6 +34,7 @@ pkgs.stdenvNoCC.mkDerivation rec {
   ];
 
   patchPhase = ''
+    # Fix paths
     substituteInPlace install_logwatch.sh \
       --replace "/usr/share"      "$out/usr/share"          \
       --replace "/etc/logwatch"   "$out/etc/logwatch"       \
@@ -37,6 +42,13 @@ pkgs.stdenvNoCC.mkDerivation rec {
       --replace " perl "          " ${pkgs.perl}/bin/perl " \
       --replace "/usr/sbin"       "$out/bin"                \
       --replace "install -m 0755 -d \$TEMPDIR" ":"
+  '' + lib.optionalString (tag == "") ''
+    # Set version
+    sed -i -e "s|^Version:.*|Version: ${rev}|" logwatch.spec
+    sed -i \
+      -e "s|^my \$Version = '.*';|my \$Version = '${rev}';|" \
+      -e "s|^my \$VDate = '.*';|my \$VDate = '${date}';|" \
+      scripts/logwatch.pl
   '';
 
   buildPhase = "";
