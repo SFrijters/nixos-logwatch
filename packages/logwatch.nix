@@ -15,9 +15,9 @@ let
       cp ${script} $out/etc/logwatch/scripts/services/${name}
     '';
 
-  rev = "d483158a5e2f9602958e62b8371e5a75c0918b96";
+  rev = "ea779675a3ecb417730516aacf7bb625cc3508cc";
   tag = "";
-  date = "2024-02-10";
+  date = "2024-02-26";
 in
 pkgs.stdenvNoCC.mkDerivation {
   pname = "logwatch";
@@ -26,7 +26,7 @@ pkgs.stdenvNoCC.mkDerivation {
   src = pkgs.fetchgit {
     url = "https://git.code.sf.net/p/logwatch/git";
     rev = if tag != "" then "refs/tags/${tag}" else rev;
-    hash = "sha256-/qWcBrpG/Lpm2i7OFQ6SOfJJhEM6SvGDBAwwAMViT2w=";
+    hash = "sha256-5bYU7jh1zBUzP7TOOGJTbbe3rPqyZ1ybIOZWFXYF0TE=";
   };
 
   nativeBuildInputs = [
