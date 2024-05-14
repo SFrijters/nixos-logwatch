@@ -2,9 +2,8 @@
 , lib
 , journalCtlEntries ? []
 }:
-
 let
-  mkJournalCtlEntry = { name, title ? null, output ? "cat", unit ? null, script ? null}:
+  mkJournalCtlEntry = { name, title ? null, output ? "cat", unit ? null, script ? null }:
     ''
       echo Adding JournalCtl entry '${name}'
     '' + "echo -e '" + lib.optionalString (title != null) ''
@@ -15,17 +14,18 @@ let
       cp ${script} $out/etc/logwatch/scripts/services/${name}
     '';
 
+  # For unstable versions: set rev not-null, for stable versions: set tag not-null
   rev = "2d80f9204a46bbcea819eda34196e52b97f0fa2f";
-  tag = "";
+  tag = null;
   date = "2024-05-12";
 in
 pkgs.stdenvNoCC.mkDerivation {
   pname = "logwatch";
-  version = if tag != "" then tag else "unstable-${date}";
+  version = assert tag == null || rev == null; if tag != null then tag else "unstable-${date}";
 
   src = pkgs.fetchgit {
     url = "https://git.code.sf.net/p/logwatch/git";
-    rev = if tag != "" then "refs/tags/${tag}" else rev;
+    rev = if tag != null then "refs/tags/${tag}" else rev;
     hash = "sha256-8oJljlTNs/iOONIH9n7+ABtFtEUhMnPfoWDnefauApM=";
   };
 
@@ -42,7 +42,7 @@ pkgs.stdenvNoCC.mkDerivation {
       --replace-fail " perl "          " ${pkgs.perl}/bin/perl " \
       --replace-fail "/usr/sbin"       "$out/bin"                \
       --replace-fail "install -m 0755 -d \$TEMPDIR" ":"
-  '' + lib.optionalString (tag == "") ''
+  '' + lib.optionalString (tag == null) ''
     # Set version
     sed -i -e "s|^Version:.*|Version: ${rev}|" logwatch.spec
     sed -i \
