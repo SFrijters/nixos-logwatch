@@ -1,16 +1,30 @@
-{ pkgs
-, lib
-, journalCtlEntries ? []
+{
+  pkgs,
+  lib,
+  journalCtlEntries ? [ ],
 }:
 let
-  mkJournalCtlEntry = { name, title ? null, output ? "cat", unit ? null, script ? null }:
+  mkJournalCtlEntry =
+    {
+      name,
+      title ? null,
+      output ? "cat",
+      unit ? null,
+      script ? null,
+    }:
     ''
       echo Adding JournalCtl entry '${name}'
-    '' + "echo -e '" + lib.optionalString (title != null) ''
+    ''
+    + "echo -e '"
+    + lib.optionalString (title != null) ''
       Title = "${title}"\n
-    '' + ''
-      LogFile =\nLogFile = logwatch-null\n*JournalCtl = "--output=${output} --unit=${if unit != null then unit else "${name}.service"}"\n' > $out/etc/logwatch/conf/services/${name}.conf
-    '' + lib.optionalString (script != null) ''
+    ''
+    + ''
+      LogFile =\nLogFile = logwatch-null\n*JournalCtl = "--output=${output} --unit=${
+        if unit != null then unit else "${name}.service"
+      }"\n' > $out/etc/logwatch/conf/services/${name}.conf
+    ''
+    + lib.optionalString (script != null) ''
       cp ${script} $out/etc/logwatch/scripts/services/${name}
     '';
 
@@ -21,7 +35,9 @@ let
 in
 pkgs.stdenvNoCC.mkDerivation {
   pname = "logwatch";
-  version = assert tag == null || rev == null; if tag != null then tag else "unstable-${date}";
+  version =
+    assert tag == null || rev == null;
+    if tag != null then tag else "unstable-${date}";
 
   src = pkgs.fetchgit {
     url = "https://git.code.sf.net/p/logwatch/git";
@@ -29,37 +45,39 @@ pkgs.stdenvNoCC.mkDerivation {
     hash = "sha256-Fg4Q+QElNIHaWlhIzNegTxpKe97sRrqg9H/v137ZRfU=";
   };
 
-  nativeBuildInputs = [
-    pkgs.makeWrapper
-  ];
+  nativeBuildInputs = [ pkgs.makeWrapper ];
 
-  patchPhase = ''
-    # Fix paths
-    substituteInPlace install_logwatch.sh \
-      --replace-fail "/usr/share"      "$out/usr/share"          \
-      --replace-fail "/etc/logwatch"   "$out/etc/logwatch"       \
-      --replace-fail "/usr/bin/perl"   "${pkgs.perl}/bin/perl"   \
-      --replace-fail " perl "          " ${pkgs.perl}/bin/perl " \
-      --replace-fail "/usr/sbin"       "$out/bin"                \
-      --replace-fail "install -m 0755 -d \$TEMPDIR" ":"
-  '' + lib.optionalString (tag == null) ''
-    # Set version
-    sed -i -e "s|^Version:.*|Version: ${rev}|" logwatch.spec
-    sed -i \
-      -e "s|^my \$Version = '.*';|my \$Version = '${rev}';|" \
-      -e "s|^my \$VDate = '.*';|my \$VDate = '${date}';|" \
-      scripts/logwatch.pl
-  '';
+  patchPhase =
+    ''
+      # Fix paths
+      substituteInPlace install_logwatch.sh \
+        --replace-fail "/usr/share"      "$out/usr/share"          \
+        --replace-fail "/etc/logwatch"   "$out/etc/logwatch"       \
+        --replace-fail "/usr/bin/perl"   "${pkgs.perl}/bin/perl"   \
+        --replace-fail " perl "          " ${pkgs.perl}/bin/perl " \
+        --replace-fail "/usr/sbin"       "$out/bin"                \
+        --replace-fail "install -m 0755 -d \$TEMPDIR" ":"
+    ''
+    + lib.optionalString (tag == null) ''
+      # Set version
+      sed -i -e "s|^Version:.*|Version: ${rev}|" logwatch.spec
+      sed -i \
+        -e "s|^my \$Version = '.*';|my \$Version = '${rev}';|" \
+        -e "s|^my \$VDate = '.*';|my \$VDate = '${date}';|" \
+        scripts/logwatch.pl
+    '';
 
   buildPhase = "";
 
-  installPhase = ''
-    mkdir -p $out/bin
-    sh install_logwatch.sh
+  installPhase =
+    ''
+      mkdir -p $out/bin
+      sh install_logwatch.sh
 
-    # Null log necessary to be able to use journalctl
-    echo -e "LogFile = logwatch-null.log" > $out/etc/logwatch/conf/logfiles/logwatch-null.conf
-  '' + (lib.concatMapStrings mkJournalCtlEntry journalCtlEntries);
+      # Null log necessary to be able to use journalctl
+      echo -e "LogFile = logwatch-null.log" > $out/etc/logwatch/conf/logfiles/logwatch-null.conf
+    ''
+    + (lib.concatMapStrings mkJournalCtlEntry journalCtlEntries);
 
   postFixup = ''
     substituteInPlace $out/bin/logwatch \
@@ -83,8 +101,23 @@ pkgs.stdenvNoCC.mkDerivation {
       --replace-fail "if (keys %OtherList) {" "if (0) {"
 
     wrapProgram $out/bin/logwatch \
-      --prefix PERL5LIB : "${with pkgs.perlPackages; makePerlPath [ DateManip HTMLParser SysCPU SysMemInfo ]}" \
-      --prefix PATH : "${lib.makeBinPath [ pkgs.nettools pkgs.gzip pkgs.bzip2 pkgs.xz ]}" \
+      --prefix PERL5LIB : "${
+        with pkgs.perlPackages;
+        makePerlPath [
+          DateManip
+          HTMLParser
+          SysCPU
+          SysMemInfo
+        ]
+      }" \
+      --prefix PATH : "${
+        lib.makeBinPath [
+          pkgs.nettools
+          pkgs.gzip
+          pkgs.bzip2
+          pkgs.xz
+        ]
+      }" \
       --set pathto_ifconfig  "${pkgs.nettools}/bin/ifconfig"
   '';
 }

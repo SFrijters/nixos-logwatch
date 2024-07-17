@@ -6,35 +6,42 @@
     flake-utils.url = "github:numtide/flake-utils";
   };
 
-  outputs = { self, nixpkgs, flake-utils, ... }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let pkgs = nixpkgs.legacyPackages.${system}; in
+  outputs =
+    {
+      self,
+      nixpkgs,
+      flake-utils,
+      ...
+    }:
+    flake-utils.lib.eachDefaultSystem (
+      system:
+      let
+        pkgs = nixpkgs.legacyPackages.${system};
+      in
       {
         packages = rec {
           default = logwatch;
-          logwatch = pkgs.callPackage ./packages/logwatch.nix {};
-          nix-gc-script = pkgs.callPackage ./packages/logwatch-scripts/nix-gc.nix {};
-          nixos-upgrade-script = pkgs.callPackage ./packages/logwatch-scripts/nixos-upgrade.nix {};
+          logwatch = pkgs.callPackage ./packages/logwatch.nix { };
+          nix-gc-script = pkgs.callPackage ./packages/logwatch-scripts/nix-gc.nix { };
+          nixos-upgrade-script = pkgs.callPackage ./packages/logwatch-scripts/nixos-upgrade.nix { };
         };
 
         checks.default = pkgs.nixosTest {
           name = "logwatch-module-test";
 
-          nodes.server = { ... }: {
+          nodes.server =
+            { ... }:
+            {
 
-            imports = [
-              self.nixosModules.logwatch
-            ];
+              imports = [ self.nixosModules.logwatch ];
 
-            environment.systemPackages = [
-              pkgs.mailutils
-            ];
+              environment.systemPackages = [ pkgs.mailutils ];
 
-            services = {
-              logwatch.enable = true;
-              postfix.enable = true;
+              services = {
+                logwatch.enable = true;
+                postfix.enable = true;
+              };
             };
-          };
 
           testScript = ''
             import time
@@ -54,8 +61,8 @@
 
         formatter = pkgs.nixfmt-rfc-style;
       }
-    ) //
-    {
+    )
+    // {
       nixosModules = {
         logwatch = import ./modules/logwatch.nix;
       };
