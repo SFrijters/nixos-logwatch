@@ -51,6 +51,8 @@
                 raise
           '';
         };
+
+        formatter = pkgs.nixfmt-rfc-style;
       }
     ) //
     {
