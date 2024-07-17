@@ -19,3 +19,5 @@ jobs:
     - run: |
         nix run . -- --version
         nix flake check -L
+        nix fmt
+        git diff --exit-code
