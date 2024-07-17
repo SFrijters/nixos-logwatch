@@ -15,9 +15,9 @@ let
     '';
 
   # For unstable versions: set rev not-null, for stable versions: set tag not-null
-  rev = "5d564f90dfa48b05e2f53f3b183fadaa7806ff62";
+  rev = "bbd9f3cd45d80830fade96f80c1b42dfda869855";
   tag = null;
-  date = "2024-06-24";
+  date = "2024-07-14";
 in
 pkgs.stdenvNoCC.mkDerivation {
   pname = "logwatch";
@@ -26,7 +26,7 @@ pkgs.stdenvNoCC.mkDerivation {
   src = pkgs.fetchgit {
     url = "https://git.code.sf.net/p/logwatch/git";
     rev = if tag != null then "refs/tags/${tag}" else rev;
-    hash = "sha256-cjGurm/bTzM3M1U77AewTxdy+ncSmbHKOB1FB7SbktY=";
+    hash = "sha256-Fg4Q+QElNIHaWlhIzNegTxpKe97sRrqg9H/v137ZRfU=";
   };
 
   nativeBuildInputs = [
