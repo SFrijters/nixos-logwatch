@@ -56,6 +56,8 @@
             print(mail)
             if "Subject: Logwatch for server" not in mail:
                 raise
+            if "Logwatch ${self.packages.${system}.logwatch.version}" not in mail:
+                raise
           '';
         };
 
