@@ -1,60 +1,90 @@
-{ pkgs
-, lib
-, journalCtlEntries ? []
+{
+  pkgs,
+  lib,
+  journalCtlEntries ? [ ],
 }:
-
 let
-  mkJournalCtlEntry = { name, title ? null, output ? "cat", unit ? null, script ? null}:
+  mkJournalCtlEntry =
+    {
+      name,
+      title ? null,
+      output ? "cat",
+      unit ? null,
+      script ? null,
+    }:
     ''
       echo Adding JournalCtl entry '${name}'
-    '' + "echo -e '" + lib.optionalString (title != null) ''
+    ''
+    + "echo -e '"
+    + lib.optionalString (title != null) ''
       Title = "${title}"\n
-    '' + ''
-      LogFile =\nLogFile = logwatch-null\n*JournalCtl = "--output=${output} --unit=${if unit != null then unit else "${name}.service"}"\n' > $out/etc/logwatch/conf/services/${name}.conf
-    '' + lib.optionalString (script != null) ''
+    ''
+    + ''
+      LogFile =\nLogFile = logwatch-null\n*JournalCtl = "--output=${output} --unit=${
+        if unit != null then unit else "${name}.service"
+      }"\n' > $out/etc/logwatch/conf/services/${name}.conf
+    ''
+    + lib.optionalString (script != null) ''
       cp ${script} $out/etc/logwatch/scripts/services/${name}
     '';
+
+  # For unstable versions: set rev not-null, for stable versions: set tag not-null
+  rev = null;
+  tag = "7.11";
+  date = "2024-07-21";
 in
-pkgs.stdenvNoCC.mkDerivation rec {
+pkgs.stdenvNoCC.mkDerivation {
   pname = "logwatch";
-  version = "7.10";
+  version =
+    assert tag == null || rev == null;
+    if tag != null then tag else "unstable-${date}";
 
   src = pkgs.fetchgit {
     url = "https://git.code.sf.net/p/logwatch/git";
-    rev = "refs/tags/${version}";
-    hash = "sha256-MazRi5Tkssv+9nk2a1LgVcOvWZZ5T6/iwiZ+EZj+HI0=";
+    rev = if tag != null then "refs/tags/${tag}" else rev;
+    hash = "sha256-eD9upL2J00KcFAoKORV8sa6+L1y5h3WACYBDmJPo/sw=";
   };
 
-  nativeBuildInputs = [
-    pkgs.makeWrapper
-  ];
+  nativeBuildInputs = [ pkgs.makeWrapper ];
 
-  patchPhase = ''
-    substituteInPlace install_logwatch.sh \
-      --replace "/usr/share"      "$out/usr/share"          \
-      --replace "/etc/logwatch"   "$out/etc/logwatch"       \
-      --replace "/usr/bin/perl"   "${pkgs.perl}/bin/perl"   \
-      --replace " perl "          " ${pkgs.perl}/bin/perl " \
-      --replace "/usr/sbin"       "$out/bin"                \
-      --replace "install -m 0755 -d \$TEMPDIR" ":"
-  '';
+  patchPhase =
+    ''
+      # Fix paths
+      substituteInPlace install_logwatch.sh \
+        --replace-fail "/usr/share"      "$out/usr/share"          \
+        --replace-fail "/etc/logwatch"   "$out/etc/logwatch"       \
+        --replace-fail "/usr/bin/perl"   "${pkgs.perl}/bin/perl"   \
+        --replace-fail " perl "          " ${pkgs.perl}/bin/perl " \
+        --replace-fail "/usr/sbin"       "$out/bin"                \
+        --replace-fail "install -m 0755 -d \$TEMPDIR" ":"
+    ''
+    + lib.optionalString (tag == null) ''
+      # Set version
+      sed -i -e "s|^Version:.*|Version: ${rev}|" logwatch.spec
+      sed -i \
+        -e "s|^my \$Version = '.*';|my \$Version = '${rev}';|" \
+        -e "s|^my \$VDate = '.*';|my \$VDate = '${date}';|" \
+        scripts/logwatch.pl
+    '';
 
   buildPhase = "";
 
-  installPhase = ''
-    mkdir -p $out/bin
-    sh install_logwatch.sh
+  installPhase =
+    ''
+      mkdir -p $out/bin
+      sh install_logwatch.sh
 
-    # Null log necessary to be able to use journalctl
-    echo -e "LogFile = logwatch-null.log" > $out/etc/logwatch/conf/logfiles/logwatch-null.conf
-  '' + (lib.concatMapStrings mkJournalCtlEntry journalCtlEntries);
+      # Null log necessary to be able to use journalctl
+      echo -e "LogFile = logwatch-null.log" > $out/etc/logwatch/conf/logfiles/logwatch-null.conf
+    ''
+    + (lib.concatMapStrings mkJournalCtlEntry journalCtlEntries);
 
   postFixup = ''
     substituteInPlace $out/bin/logwatch \
-      --replace "/usr/share"    "$out/usr/share"        \
-      --replace "/etc/logwatch" "$out/etc/logwatch"     \
-      --replace "/usr/bin/perl" "${pkgs.perl}/bin/perl" \
-      --replace "/var/cache"    "/tmp"
+      --replace-fail "/usr/share"    "$out/usr/share"        \
+      --replace-fail "/etc/logwatch" "$out/etc/logwatch"     \
+      --replace-fail "/usr/bin/perl" "${pkgs.perl}/bin/perl" \
+      --replace-fail "/var/cache"    "/tmp"
 
     {
         echo "TmpDir = /tmp/logwatch";
@@ -64,15 +94,30 @@ pkgs.stdenvNoCC.mkDerivation rec {
 
     # Enable runtime stats
     substituteInPlace $out/usr/share/logwatch/default.conf/services/zz-runtime.conf \
-      --replace '#$show_uptime = 0' '$show_uptime = 1'
+      --replace-fail '#$show_uptime = 0' '$show_uptime = 1'
 
     # Do not show unmatched entries; getting all messages from journalctl unit 'session*' contains a lot more stuff than only sudo
     substituteInPlace $out/usr/share/logwatch/scripts/services/sudo \
-      --replace "if (keys %OtherList) {" "if (0) {"
+      --replace-fail "if (keys %OtherList) {" "if (0) {"
 
     wrapProgram $out/bin/logwatch \
-      --prefix PERL5LIB : "${with pkgs.perlPackages; makePerlPath [ DateManip HTMLParser SysCPU SysMemInfo ]}" \
-      --prefix PATH : "${lib.makeBinPath [ pkgs.nettools pkgs.gzip pkgs.bzip2 pkgs.xz ]}" \
+      --prefix PERL5LIB : "${
+        with pkgs.perlPackages;
+        makePerlPath [
+          DateManip
+          HTMLParser
+          SysCPU
+          SysMemInfo
+        ]
+      }" \
+      --prefix PATH : "${
+        lib.makeBinPath [
+          pkgs.nettools
+          pkgs.gzip
+          pkgs.bzip2
+          pkgs.xz
+        ]
+      }" \
       --set pathto_ifconfig  "${pkgs.nettools}/bin/ifconfig"
   '';
 }
