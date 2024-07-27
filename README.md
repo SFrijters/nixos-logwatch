@@ -7,7 +7,7 @@ This flake provides a NixOS module for [logwatch](https://sourceforge.net/projec
 It probably does not cover all use cases, as it has been lifted out of my personal configuration.
 Any suggestions or PR are welcome!
 
-The `master` branch of this repository packages [tagged logwatch releases](https://sourceforge.net/p/logwatch/git/ci/7.10/tree/) (starting with 7.10), while the `unstable` branch will be updated more regularly following the [logwatch master branch](https://sourceforge.net/p/logwatch/git/ci/master/tree/).
+The `master` branch of this repository packages [tagged logwatch releases](https://sourceforge.net/p/logwatch/git/ci/7.11/tree/) (currently 7.11), while the `unstable` branch will be updated more regularly following the [logwatch master branch](https://sourceforge.net/p/logwatch/git/ci/master/tree/).
 
 ## Basic usage
 
