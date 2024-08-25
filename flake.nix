@@ -44,6 +44,7 @@
             };
 
           testScript = ''
+            import sys
             import time
             start_all()
             server.wait_for_unit("default.target")
@@ -55,9 +56,13 @@
             mail = server.succeed("mail -p")
             print(mail)
             if "Subject: Logwatch for server" not in mail:
-                raise
-            if "Logwatch ${self.packages.${system}.logwatch.version}" not in mail:
-                raise
+                sys.exit(1)
+            if "unstable" not in "${self.packages.${system}.logwatch.version}":
+                if "Logwatch ${self.packages.${system}.logwatch.version}" not in mail:
+                    sys.exit(1)
+            else:
+                if "Logwatch ${self.packages.${system}.logwatch.src.rev}" not in mail:
+                    sys.exit(1)
           '';
         };
 
