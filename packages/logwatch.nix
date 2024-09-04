@@ -60,11 +60,11 @@ stdenvNoCC.mkDerivation {
     ''
       # Fix paths
       substituteInPlace install_logwatch.sh \
-        --replace-fail "/usr/share"      "$out/usr/share"          \
-        --replace-fail "/etc/logwatch"   "$out/etc/logwatch"       \
+        --replace-fail "/usr/share"      "$out/usr/share"       \
+        --replace-fail "/etc/logwatch"   "$out/etc/logwatch"    \
         --replace-fail "/usr/bin/perl"   "${lib.getExe perl}"   \
         --replace-fail " perl "          " ${lib.getExe perl} " \
-        --replace-fail "/usr/sbin"       "$out/bin"                \
+        --replace-fail "/usr/sbin"       "$out/bin"             \
         --replace-fail "install -m 0755 -d \$TEMPDIR" ":"
     ''
     + lib.optionalString (tag == null) ''
@@ -90,8 +90,8 @@ stdenvNoCC.mkDerivation {
 
   postFixup = ''
     substituteInPlace $out/bin/logwatch \
-      --replace-fail "/usr/share"    "$out/usr/share"        \
-      --replace-fail "/etc/logwatch" "$out/etc/logwatch"     \
+      --replace-fail "/usr/share"    "$out/usr/share"     \
+      --replace-fail "/etc/logwatch" "$out/etc/logwatch"  \
       --replace-fail "/usr/bin/perl" "${lib.getExe perl}" \
       --replace-fail "/var/cache"    "/tmp"
 
