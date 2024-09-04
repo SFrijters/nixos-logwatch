@@ -1,6 +1,15 @@
 {
-  pkgs,
+  stdenvNoCC,
   lib,
+  fetchgit,
+  makeWrapper,
+  perl,
+  perlPackages,
+  postfix,
+  nettools,
+  gzip,
+  bzip2,
+  xz,
   journalCtlEntries ? [ ],
 }:
 let
@@ -33,19 +42,19 @@ let
   tag = null;
   date = "2024-08-18";
 in
-pkgs.stdenvNoCC.mkDerivation {
+stdenvNoCC.mkDerivation {
   pname = "logwatch";
   version =
     assert tag == null || rev == null;
     if tag != null then tag else "unstable-${date}";
 
-  src = pkgs.fetchgit {
+  src = fetchgit {
     url = "https://git.code.sf.net/p/logwatch/git";
     rev = if tag != null then "refs/tags/${tag}" else rev;
     hash = "sha256-W2WpDcnzaXEiUjp6PCz5gfT42Q2dwiaAt+exblGWcPc=";
   };
 
-  nativeBuildInputs = [ pkgs.makeWrapper ];
+  nativeBuildInputs = [ makeWrapper ];
 
   patchPhase =
     ''
@@ -53,8 +62,8 @@ pkgs.stdenvNoCC.mkDerivation {
       substituteInPlace install_logwatch.sh \
         --replace-fail "/usr/share"      "$out/usr/share"          \
         --replace-fail "/etc/logwatch"   "$out/etc/logwatch"       \
-        --replace-fail "/usr/bin/perl"   "${pkgs.perl}/bin/perl"   \
-        --replace-fail " perl "          " ${pkgs.perl}/bin/perl " \
+        --replace-fail "/usr/bin/perl"   "${lib.getExe perl}"   \
+        --replace-fail " perl "          " ${lib.getExe perl} " \
         --replace-fail "/usr/sbin"       "$out/bin"                \
         --replace-fail "install -m 0755 -d \$TEMPDIR" ":"
     ''
@@ -83,12 +92,12 @@ pkgs.stdenvNoCC.mkDerivation {
     substituteInPlace $out/bin/logwatch \
       --replace-fail "/usr/share"    "$out/usr/share"        \
       --replace-fail "/etc/logwatch" "$out/etc/logwatch"     \
-      --replace-fail "/usr/bin/perl" "${pkgs.perl}/bin/perl" \
+      --replace-fail "/usr/bin/perl" "${lib.getExe perl}" \
       --replace-fail "/var/cache"    "/tmp"
 
     {
         echo "TmpDir = /tmp/logwatch";
-        echo "mailer = \"${pkgs.postfix}/bin/sendmail -t\"";
+        echo "mailer = \"${postfix}/bin/sendmail -t\"";
         echo "MailFrom = Logwatch"
     } >> $out/usr/share/logwatch/default.conf/logwatch.conf
 
@@ -102,7 +111,7 @@ pkgs.stdenvNoCC.mkDerivation {
 
     wrapProgram $out/bin/logwatch \
       --prefix PERL5LIB : "${
-        with pkgs.perlPackages;
+        with perlPackages;
         makePerlPath [
           DateManip
           HTMLParser
@@ -112,12 +121,12 @@ pkgs.stdenvNoCC.mkDerivation {
       }" \
       --prefix PATH : "${
         lib.makeBinPath [
-          pkgs.nettools
-          pkgs.gzip
-          pkgs.bzip2
-          pkgs.xz
+          nettools
+          gzip
+          bzip2
+          xz
         ]
       }" \
-      --set pathto_ifconfig  "${pkgs.nettools}/bin/ifconfig"
+      --set pathto_ifconfig  "${nettools}/bin/ifconfig"
   '';
 }

@@ -1,6 +1,6 @@
-{ pkgs, ... }:
+{ writeShellApplication }:
 
-pkgs.writeShellApplication {
+writeShellApplication {
   name = "logwatch-nixos-upgrade";
   text = ''
     package_update_regex="^  */nix/store"
