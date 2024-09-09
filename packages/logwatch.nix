@@ -58,6 +58,8 @@ stdenvNoCC.mkDerivation {
 
   patchPhase =
     ''
+      runHook prePatch
+
       # Fix paths
       substituteInPlace install_logwatch.sh \
         --replace-fail "/usr/share"      "$out/usr/share"       \
@@ -74,6 +76,9 @@ stdenvNoCC.mkDerivation {
         -e "s|^my \$Version = '.*';|my \$Version = '${rev}';|" \
         -e "s|^my \$VDate = '.*';|my \$VDate = '${date}';|" \
         scripts/logwatch.pl
+    ''
+    + ''
+      runHook postPatch
     '';
 
   dontConfigure = true;
