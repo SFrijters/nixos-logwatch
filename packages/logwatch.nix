@@ -103,7 +103,7 @@ stdenvNoCC.mkDerivation {
 
     {
         echo "TmpDir = /tmp/logwatch";
-        echo "mailer = \"${postfix}/bin/sendmail -t\"";
+        echo "mailer = \"${lib.getExe' postfix "sendmail"} -t\"";
         echo "MailFrom = Logwatch"
     } >> $out/usr/share/logwatch/default.conf/logwatch.conf
 
@@ -133,6 +133,6 @@ stdenvNoCC.mkDerivation {
           xz
         ]
       }" \
-      --set pathto_ifconfig  "${nettools}/bin/ifconfig"
+      --set pathto_ifconfig  "${lib.getExe' nettools "ifconfig"}"
   '';
 }
