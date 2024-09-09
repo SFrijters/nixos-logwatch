@@ -76,7 +76,8 @@ stdenvNoCC.mkDerivation {
         scripts/logwatch.pl
     '';
 
-  doBuild = false;
+  dontConfigure = true;
+  dontBuild = true;
 
   installPhase =
     ''
