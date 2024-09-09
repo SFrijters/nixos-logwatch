@@ -60,10 +60,14 @@
                 raise Exception("Missing text 'Subject: Logwatch for server' in output of 'mail -p'")
             if "unstable" not in "${self.packages.${system}.logwatch.version}":
                 if "Logwatch ${self.packages.${system}.logwatch.version}" not in mail:
-                    raise Exception("Missing text 'Logwatch ${self.packages.${system}.logwatch.version} in output of 'mail -p'")
+                    raise Exception("Missing text 'Logwatch ${
+                      self.packages.${system}.logwatch.version
+                    } in output of 'mail -p'")
             else:
                 if "Logwatch ${self.packages.${system}.logwatch.src.rev}" not in mail:
-                    raise Exception("Missing text 'Logwatch ${self.packages.${system}.logwatch.src.rev} in output of 'mail -p'")
+                    raise Exception("Missing text 'Logwatch ${
+                      self.packages.${system}.logwatch.src.rev
+                    } in output of 'mail -p'")
           '';
         };
 
