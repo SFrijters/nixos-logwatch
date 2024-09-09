@@ -41,6 +41,8 @@
                 logwatch.enable = true;
                 postfix.enable = true;
               };
+
+              virtualisation.diskSize = 128;
             };
 
           testScript = ''
