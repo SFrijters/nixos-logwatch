@@ -42,11 +42,10 @@
                 postfix.enable = true;
               };
 
-              virtualisation.diskSize = 128;
+              virtualisation.diskSize = 128; # MB
             };
 
           testScript = ''
-            import sys
             import time
             start_all()
             server.wait_for_unit("default.target")
@@ -58,13 +57,13 @@
             mail = server.succeed("mail -p")
             print(mail)
             if "Subject: Logwatch for server" not in mail:
-                sys.exit(1)
+                raise Exception("Missing text 'Subject: Logwatch for server' in output of 'mail -p'")
             if "unstable" not in "${self.packages.${system}.logwatch.version}":
                 if "Logwatch ${self.packages.${system}.logwatch.version}" not in mail:
-                    sys.exit(1)
+                    raise Exception("Missing text 'Logwatch ${self.packages.${system}.logwatch.version} in output of 'mail -p'")
             else:
                 if "Logwatch ${self.packages.${system}.logwatch.src.rev}" not in mail:
-                    sys.exit(1)
+                    raise Exception("Missing text 'Logwatch ${self.packages.${system}.logwatch.src.rev} in output of 'mail -p'")
           '';
         };
 
