@@ -38,9 +38,10 @@ let
     '';
 
   # For unstable versions: set rev not-null, for stable versions: set tag not-null
-  rev = "a1ebae983d46ab0e8604b3ed30cf2d0c3a84b96f";
+  rev = "c820291074a5af7f0c0096842cb6f18a706db676";
   tag = null;
-  date = "2024-09-08";
+  date = "2024-09-21";
+  hash = "sha256-Y2z4QC/JvDb8jE7ZG95CpknyPuQejiwUM/414flBmog=";
 in
 stdenvNoCC.mkDerivation {
   pname = "logwatch";
@@ -49,9 +50,9 @@ stdenvNoCC.mkDerivation {
     if tag != null then tag else "unstable-${date}";
 
   src = fetchgit {
+    inherit hash;
     url = "https://git.code.sf.net/p/logwatch/git";
     rev = if tag != null then "refs/tags/${tag}" else rev;
-    hash = "sha256-uerZhVZGP3EwTCos5MSvuFc8/eB5Yxo4k0zXWy/UIkU=";
   };
 
   nativeBuildInputs = [ makeWrapper ];
