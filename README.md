@@ -1,6 +1,6 @@
 # nixos-logwatch
 
-[![nix run](https://github.com/SFrijters/nixos-logwatch/actions/workflows/nix-run.yml/badge.svg)](https://github.com/SFrijters/nixos-logwatch/actions/workflows/nix-run.yml)
+[![nix flake check](https://github.com/SFrijters/nixos-logwatch/actions/workflows/nix-flake-check.yml/badge.svg)](https://github.com/SFrijters/nixos-logwatch/actions/workflows/nix-flake-check.yml)
 
 This flake provides a NixOS module for [logwatch](https://sourceforge.net/projects/logwatch/).
 

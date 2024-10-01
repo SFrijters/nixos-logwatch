@@ -1,4 +1,4 @@
-name: "nix-run"
+name: "nix flake check"
 on:
   pull_request:
     paths-ignore:
@@ -8,7 +8,7 @@ on:
       - 'README.md'
 
 jobs:
-  nix-run:
+  nix-flake-check:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -16,8 +16,21 @@ jobs:
       with:
         github_access_token: ${{ secrets.GITHUB_TOKEN }}
     - uses: DeterminateSystems/magic-nix-cache-action@v8
-    - run: |
-        nix run . -- --version
+
+    - name: Flake metadata
+      run: |
+        nix flake metadata
+        nix flake show
+
+    - name: Flake check
+      run: |
         nix flake check -L
+
+    - name: Run logwatch
+      run: |
+        nix run . -- --version
+
+    - name: Formatter check
+      run: |
         nix fmt
         git diff --exit-code
