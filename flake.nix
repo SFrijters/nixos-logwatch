@@ -27,6 +27,7 @@
       packages = forAllSystems (pkgs: rec {
         default = logwatch;
         logwatch = pkgs.callPackage ./packages/logwatch.nix { };
+        passthrough-script = pkgs.callPackage ./packages/logwatch-scripts/passthrough.nix { };
         nix-gc-script = pkgs.callPackage ./packages/logwatch-scripts/nix-gc.nix { };
         nixos-upgrade-script = pkgs.callPackage ./packages/logwatch-scripts/nixos-upgrade.nix { };
       });
