@@ -11,6 +11,7 @@
   bzip2,
   xz,
   journalCtlEntries ? [ ],
+  removeScripts ? [ ],
 }:
 let
   mkJournalCtlEntry =
@@ -92,48 +93,56 @@ stdenvNoCC.mkDerivation {
 
       # Null log necessary to be able to use journalctl
       echo -e "LogFile = logwatch-null.log" > $out/etc/logwatch/conf/logfiles/logwatch-null.conf
+
     ''
     + (lib.concatMapStrings mkJournalCtlEntry journalCtlEntries);
 
-  postFixup = ''
-    substituteInPlace $out/bin/logwatch \
-      --replace-fail "/usr/share"    "$out/usr/share"     \
-      --replace-fail "/etc/logwatch" "$out/etc/logwatch"  \
-      --replace-fail "/usr/bin/perl" "${lib.getExe perl}" \
-      --replace-fail "/var/cache"    "/tmp"
+  postFixup =
+    ''
+      substituteInPlace $out/bin/logwatch \
+        --replace-fail "/usr/share"    "$out/usr/share"     \
+        --replace-fail "/etc/logwatch" "$out/etc/logwatch"  \
+        --replace-fail "/usr/bin/perl" "${lib.getExe perl}" \
+        --replace-fail "/var/cache"    "/tmp"
 
-    {
-        echo "TmpDir = /tmp/logwatch";
-        echo "mailer = \"${lib.getExe' postfix "sendmail"} -t\"";
-        echo "MailFrom = Logwatch"
-    } >> $out/usr/share/logwatch/default.conf/logwatch.conf
+      {
+          echo "TmpDir = /tmp/logwatch";
+          echo "mailer = \"${lib.getExe' postfix "sendmail"} -t\"";
+          echo "MailFrom = Logwatch"
+      } >> $out/usr/share/logwatch/default.conf/logwatch.conf
 
-    # Enable runtime stats
-    substituteInPlace $out/usr/share/logwatch/default.conf/services/zz-runtime.conf \
-      --replace-fail '#$show_uptime = 0' '$show_uptime = 1'
+      # Enable runtime stats
+      substituteInPlace $out/usr/share/logwatch/default.conf/services/zz-runtime.conf \
+        --replace-fail '#$show_uptime = 0' '$show_uptime = 1'
 
-    # Do not show unmatched entries; getting all messages from journalctl unit 'session*' contains a lot more stuff than only sudo
-    substituteInPlace $out/usr/share/logwatch/scripts/services/sudo \
-      --replace-fail "if (keys %OtherList) {" "if (0) {"
+      # Do not show unmatched entries; getting all messages from journalctl unit 'session*' contains a lot more stuff than only sudo
+      substituteInPlace $out/usr/share/logwatch/scripts/services/sudo \
+        --replace-fail "if (keys %OtherList) {" "if (0) {"
 
-    wrapProgram $out/bin/logwatch \
-      --prefix PERL5LIB : "${
-        with perlPackages;
-        makePerlPath [
-          DateManip
-          HTMLParser
-          SysCPU
-          SysMemInfo
-        ]
-      }" \
-      --prefix PATH : "${
-        lib.makeBinPath [
-          nettools
-          gzip
-          bzip2
-          xz
-        ]
-      }" \
-      --set pathto_ifconfig  "${lib.getExe' nettools "ifconfig"}"
-  '';
+    ''
+    + (lib.concatMapStrings (
+      f: "rm $out/usr/share/logwatch/default.conf/services/${f}.conf;"
+    ) removeScripts)
+    + ''
+
+      wrapProgram $out/bin/logwatch \
+        --prefix PERL5LIB : "${
+          with perlPackages;
+          makePerlPath [
+            DateManip
+            HTMLParser
+            SysCPU
+            SysMemInfo
+          ]
+        }" \
+        --prefix PATH : "${
+          lib.makeBinPath [
+            nettools
+            gzip
+            bzip2
+            xz
+          ]
+        }" \
+        --set pathto_ifconfig  "${lib.getExe' nettools "ifconfig"}"
+    '';
 }

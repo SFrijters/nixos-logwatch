@@ -10,7 +10,9 @@ let
   cfg = config.services.logwatch;
   types = lib.types;
 
-  logwatch = pkgs.callPackage ../packages/logwatch.nix { journalCtlEntries = cfg.journalCtlEntries; };
+  logwatch = pkgs.callPackage ../packages/logwatch.nix {
+    inherit (cfg) journalCtlEntries removeScripts;
+  };
 
   logwatchWithTemp = pkgs.writeShellApplication {
     name = "logwatch";
@@ -68,6 +70,11 @@ in
       default = [ ];
       type = types.listOf types.attrs;
       description = "What to watch";
+    };
+    removeScripts = lib.mkOption {
+      default = [ ];
+      type = types.listOf types.str;
+      description = "Which default scripts to remove";
     };
   };
 

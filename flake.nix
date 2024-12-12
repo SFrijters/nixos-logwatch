@@ -45,8 +45,11 @@
               environment.systemPackages = [ pkgs.mailutils ];
 
               services = {
-                logwatch.enable = true;
                 postfix.enable = true;
+                logwatch = {
+                  enable = true;
+                  removeScripts = [ "zz-network" ];
+                };
               };
 
               virtualisation.diskSize = 128; # MB
@@ -79,6 +82,8 @@
                       raise Exception("Missing text 'Logwatch ${
                         self.packages.${pkgs.system}.logwatch.src.rev
                       } in output of 'mail -p'")
+              if "Network statistics" in mail:
+                   raise Exception("Network statistics should have been removed by removeScripts")
             '';
         };
       });
