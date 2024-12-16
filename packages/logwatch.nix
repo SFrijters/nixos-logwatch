@@ -30,7 +30,7 @@ let
       Title = "${title}"\n
     ''
     + ''
-      LogFile =\nLogFile = logwatch-null\n*JournalCtl = "--output=${output} --unit=${
+      LogFile =\nLogFile = none\n*JournalCtl = "--output=${output} --unit=${
         if unit != null then unit else "${name}.service"
       }"\n' > $out/etc/logwatch/conf/services/${name}.conf
     ''
@@ -90,10 +90,6 @@ stdenvNoCC.mkDerivation {
     ''
       mkdir -p $out/bin
       sh install_logwatch.sh
-
-      # Null log necessary to be able to use journalctl
-      echo -e "LogFile = logwatch-null.log" > $out/etc/logwatch/conf/logfiles/logwatch-null.conf
-
     ''
     + (lib.concatMapStrings mkJournalCtlEntry journalCtlEntries);
 
