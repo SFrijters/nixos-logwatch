@@ -48,7 +48,14 @@
                 postfix.enable = true;
                 logwatch = {
                   enable = true;
+                  range = "since 24 hours ago for those hours";
                   removeScripts = [ "zz-network" ];
+                  journalCtlEntries = [
+                    {
+                      name = "postfix";
+                      output = "short";
+                    }
+                  ];
                 };
               };
 
@@ -63,11 +70,13 @@
               import time
               start_all()
               server.wait_for_unit("default.target")
+
               # Force restart of logwatch so it sends a mail
               server.systemctl("restart logwatch")
               # VMs on CI runners can be kind of slow, delay here
               time.sleep(3)
-              # Get all mails for root and check if the expected subject is there
+
+              # Get all mails for root and check if the expected data is there
               mail = server.succeed("mail -p")
               print(mail)
               if "Subject: Logwatch for server" not in mail:
@@ -84,6 +93,21 @@
                       } in output of 'mail -p'")
               if "Network statistics" in mail:
                    raise Exception("Network statistics should have been removed by removeScripts")
+
+              # Clean mailbox
+              server.succeed("echo 'd *' | mail -N")
+
+              # Force restart of logwatch to re-analyze to logs
+              # It should now include a delivered mail in the Postfix output
+              server.systemctl("restart logwatch")
+              # VMs on CI runners can be kind of slow, delay here
+              time.sleep(3)
+
+              # Get all mails for root and check if the expected data is there
+              mail = server.succeed("mail -p")
+              print(mail)
+              if "1   Delivered" not in mail:
+                  raise Exception("Missing test '1   Delivered' in output of 'mail -p'")
             '';
         };
       });
