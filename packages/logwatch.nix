@@ -39,10 +39,10 @@ let
     '';
 
   # For unstable versions: set rev not-null, for stable versions: set tag not-null
-  rev = "77f86bd9cd0f225503de99b5184fc2ec65b079fc";
+  rev = "d046c64430ebab48f28d02b52ee2303fa3a34f8f";
   tag = null;
-  date = "2024-12-01";
-  hash = "sha256-tJaLkGbZcqAQ1m5oL1JD7W4b/eGhmhTJ4Gw1PoufIp8=";
+  date = "2024-12-19";
+  hash = "sha256-sdU353la8rQWBTJ68fuhLvxZCh6rLg5gck9aKsEqj0s=";
 in
 stdenvNoCC.mkDerivation {
   pname = "logwatch";
