@@ -51,9 +51,8 @@ stdenvNoCC.mkDerivation {
     if tag != null then tag else "unstable-${date}";
 
   src = fetchgit {
-    inherit hash;
+    inherit hash rev tag;
     url = "https://git.code.sf.net/p/logwatch/git";
-    rev = if tag != null then "refs/tags/${tag}" else rev;
   };
 
   nativeBuildInputs = [ makeWrapper ];
