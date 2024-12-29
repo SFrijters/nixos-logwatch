@@ -24,30 +24,6 @@ let
   };
 
   logwatch = pkgs.callPackage ../packages/logwatch.nix { inherit packageConfig; };
-
-  logwatchWithTemp = pkgs.writeShellApplication {
-    name = "logwatch";
-
-    runtimeInputs = [ logwatch ];
-
-    text = ''
-      __logwatch_pre() {
-        rm -rf /tmp/logwatch
-        mkdir -p /tmp/logwatch
-        echo " " > /var/log/logwatch-null.log
-      }
-
-      __logwatch_post() {
-        rm -rf /tmp/logwatch
-        rm -f /var/log/logwatch-null.log
-      }
-
-      trap __logwatch_post EXIT
-
-      __logwatch_pre
-      ${logwatch}/bin/logwatch "$@"
-    '';
-  };
 in
 {
   options.services.logwatch = {
@@ -106,7 +82,7 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    environment.systemPackages = [ logwatchWithTemp ];
+    environment.systemPackages = [ logwatch ];
     systemd.services.logwatch = {
       description = "Digests the system logs";
       wantedBy = [ ];
@@ -114,7 +90,7 @@ in
       startAt = "${cfg.startAt}";
       serviceConfig = {
         Type = "oneshot";
-        ExecStart = ''${logwatchWithTemp}/bin/logwatch --output mail'';
+        ExecStart = ''${lib.getExe logwatch} --output mail'';
         PrivateTmp = true;
       };
     };

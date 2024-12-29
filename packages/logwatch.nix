@@ -42,7 +42,7 @@ let
 
   mkConf = c:
     ''
-      TmpDir = /tmp/logwatch
+      TmpDir = /tmp
       mailer = "${lib.getExe' postfix "sendmail"} -t"
       Archives = ${if c.archives or true then "Yes" else "No"}
       MailTo = ${c.mailto or "root"}
@@ -136,4 +136,6 @@ stdenvNoCC.mkDerivation {
         }" \
         --set pathto_ifconfig  "${lib.getExe' nettools "ifconfig"}"
     '' + packageConfig.extraFixup or "";
+
+  meta.mainProgram = "logwatch";
 }
