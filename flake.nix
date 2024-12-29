@@ -120,6 +120,11 @@
               print(mail)
               if "1   Delivered" not in mail:
                   raise Exception("Missing test '1   Delivered' in output of 'mail -p', should have been enabled in 'customServices'")
+
+              text = server.succeed("logwatch --output stdout")
+              print(text)
+              if "2   Delivered" not in text:
+                  raise Exception("Missing test '2   Delivered' in output of 'logwatch --output stdout'")
             '';
         };
       });
