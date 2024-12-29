@@ -10,9 +10,20 @@ let
   cfg = config.services.logwatch;
   types = lib.types;
 
-  logwatch = pkgs.callPackage ../packages/logwatch.nix {
-    inherit (cfg) journalCtlEntries removeScripts;
+  packageConfig = {
+    inherit (cfg)
+      archives
+      mailto
+      mailfrom
+      range
+      detail
+      services
+      journalctlEntries
+      extraFixup
+      ;
   };
+
+  logwatch = pkgs.callPackage ../packages/logwatch.nix { inherit packageConfig; };
 
   logwatchWithTemp = pkgs.writeShellApplication {
     name = "logwatch";
@@ -41,10 +52,29 @@ in
 {
   options.services.logwatch = {
     enable = lib.mkEnableOption "logwatch";
+    startAt = lib.mkOption {
+      default = "*-*-* 4:00:00";
+      type = types.str;
+      description = "When to run";
+    };
+    archives = lib.mkOption {
+      default = true;
+      type = types.bool;
+      description = ''
+        Use archives?  If set to 'Yes', the archives of logfiles
+        (i.e. /var/log/messages.1 or /var/log/messages.1.gz) will
+        be searched in addition to the /var/log/messages file.
+      '';
+    };
     mailto = lib.mkOption {
       default = "root";
       type = types.str;
       description = "Recipient of the reports";
+    };
+    mailfrom = lib.mkOption {
+      default = "Logwatch";
+      type = types.str;
+      description = "Name of the sender of the reports";
     };
     range = lib.mkOption {
       default = "Yesterday";
@@ -56,25 +86,20 @@ in
       type = types.str;
       description = "Detail level of the analysis";
     };
-    service = lib.mkOption {
-      default = "All";
-      type = types.str;
+    services = lib.mkOption {
+      default = [ "All" ];
+      type = types.listOf types.str;
       description = "Which services to digest";
     };
-    startAt = lib.mkOption {
-      default = "*-*-* 4:00:00";
-      type = types.str;
-      description = "When to run";
-    };
-    journalCtlEntries = lib.mkOption {
+    journalctlEntries = lib.mkOption {
       default = [ ];
       type = types.listOf types.attrs;
       description = "What to watch";
     };
-    removeScripts = lib.mkOption {
-      default = [ ];
-      type = types.listOf types.str;
-      description = "Which default scripts to remove";
+    extraFixup = lib.mkOption {
+      default = "";
+      type = types.str;
+      description = "Arbitrary customization commands, added to the end of the fixupPhase";
     };
   };
 
@@ -87,7 +112,7 @@ in
       startAt = "${cfg.startAt}";
       serviceConfig = {
         Type = "oneshot";
-        ExecStart = ''${logwatchWithTemp}/bin/logwatch --archives --range "${cfg.range}" --detail "${cfg.detail}" --service "${cfg.service}" --mailto "${cfg.mailto}"'';
+        ExecStart = ''${logwatchWithTemp}/bin/logwatch --output mail'';
         PrivateTmp = true;
       };
     };

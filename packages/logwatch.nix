@@ -3,6 +3,7 @@
   lib,
   fetchgit,
   makeWrapper,
+  writeText,
   perl,
   perlPackages,
   postfix,
@@ -10,11 +11,10 @@
   gzip,
   bzip2,
   xz,
-  journalCtlEntries ? [ ],
-  removeScripts ? [ ],
+  packageConfig ? null,
 }:
 let
-  mkJournalCtlEntry =
+  mkJournalctlEntry =
     {
       name,
       title ? null,
@@ -37,6 +37,19 @@ let
     + lib.optionalString (script != null) ''
       cp ${script} $out/etc/logwatch/scripts/services/${name}
     '';
+
+  confFile = writeText "logwatch.conf" (mkConf packageConfig);
+
+  mkConf = c:
+    ''
+      TmpDir = /tmp/logwatch
+      mailer = "${lib.getExe' postfix "sendmail"} -t"
+      Archives = ${if c.archives or true then "Yes" else "No"}
+      MailTo = ${c.mailto or "root"}
+      MailFrom = ${c.mailfrom or "Logwatch"}
+      Range = ${c.range or "Yesterday"}
+      Detail = ${c.detail or "Low"}
+    '' + lib.concatMapStrings (s: "Service = ${s}\n") (c.services or [ "All" ]);
 
   # For unstable versions: set rev not-null, for stable versions: set tag not-null
   rev = "607f7295353157c1600f56f07395b852cec2a97b";
@@ -89,8 +102,9 @@ stdenvNoCC.mkDerivation {
     ''
       mkdir -p $out/bin
       sh install_logwatch.sh
+      cp ${confFile} $out/usr/share/logwatch/default.conf/logwatch.conf
     ''
-    + (lib.concatMapStrings mkJournalCtlEntry journalCtlEntries);
+    + (lib.concatMapStrings mkJournalctlEntry packageConfig.journalctlEntries or []);
 
   postFixup =
     ''
@@ -99,26 +113,6 @@ stdenvNoCC.mkDerivation {
         --replace-fail "/etc/logwatch" "$out/etc/logwatch"  \
         --replace-fail "/usr/bin/perl" "${lib.getExe perl}" \
         --replace-fail "/var/cache"    "/tmp"
-
-      {
-          echo "TmpDir = /tmp/logwatch";
-          echo "mailer = \"${lib.getExe' postfix "sendmail"} -t\"";
-          echo "MailFrom = Logwatch"
-      } >> $out/usr/share/logwatch/default.conf/logwatch.conf
-
-      # Enable runtime stats
-      substituteInPlace $out/usr/share/logwatch/default.conf/services/zz-runtime.conf \
-        --replace-fail '#$show_uptime = 0' '$show_uptime = 1'
-
-      # Do not show unmatched entries; getting all messages from journalctl unit 'session*' contains a lot more stuff than only sudo
-      substituteInPlace $out/usr/share/logwatch/scripts/services/sudo \
-        --replace-fail "if (keys %OtherList) {" "if (0) {"
-
-    ''
-    + (lib.concatMapStrings (
-      f: "rm $out/usr/share/logwatch/default.conf/services/${f}.conf;"
-    ) removeScripts)
-    + ''
 
       wrapProgram $out/bin/logwatch \
         --prefix PERL5LIB : "${
@@ -139,5 +133,5 @@ stdenvNoCC.mkDerivation {
           ]
         }" \
         --set pathto_ifconfig  "${lib.getExe' nettools "ifconfig"}"
-    '';
+    '' + packageConfig.extraFixup or "";
 }

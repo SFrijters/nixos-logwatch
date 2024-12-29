@@ -49,13 +49,18 @@
                 logwatch = {
                   enable = true;
                   range = "since 24 hours ago for those hours";
-                  removeScripts = [ "zz-network" ];
-                  journalCtlEntries = [
+                  services = [ "All" "-zz-network" ];
+                  journalctlEntries = [
                     {
                       name = "postfix";
                       output = "short";
                     }
                   ];
+                  extraFixup = ''
+                    # Enable runtime stats
+                    substituteInPlace $out/usr/share/logwatch/default.conf/services/zz-runtime.conf \
+                      --replace-fail '#$show_uptime = 0' '$show_uptime = 1'
+                  '';
                 };
               };
 
@@ -91,8 +96,12 @@
                       raise Exception("Missing text 'Logwatch ${
                         self.packages.${pkgs.system}.logwatch.src.rev
                       } in output of 'mail -p'")
+
               if "Network statistics" in mail:
-                   raise Exception("Network statistics should have been removed by removeScripts")
+                  raise Exception("Network statistics should have been disabled in 'services'")
+
+              if "Uptime" not in mail:
+                  raise Exception("Uptime should have been enabled in 'extraFixup'")
 
               # Clean mailbox
               server.succeed("echo 'd *' | mail -N")
