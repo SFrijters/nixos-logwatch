@@ -50,7 +50,7 @@
                   enable = true;
                   range = "since 24 hours ago for those hours";
                   services = [ "All" "-zz-network" ];
-                  journalctlEntries = [
+                  customServices = [
                     {
                       name = "postfix";
                       output = "short";
@@ -116,7 +116,7 @@
               mail = server.succeed("mail -p")
               print(mail)
               if "1   Delivered" not in mail:
-                  raise Exception("Missing test '1   Delivered' in output of 'mail -p'")
+                  raise Exception("Missing test '1   Delivered' in output of 'mail -p', should have been enabled in 'customServices'")
             '';
         };
       });

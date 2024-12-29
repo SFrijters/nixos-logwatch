@@ -31,7 +31,7 @@ In your configuration.nix:
 services.logwatch = {
   enable = true;
   range = "since 24 hours ago for those hours";
-  journalCtlEntries = [
+  customServices = [
     { name = "sshd"; }
     { name = "postfix"; output = "short"; }
     { name = "sudo"; unit = "session*"; }
@@ -41,16 +41,19 @@ services.logwatch = {
 
 Available options:
 * `enable`: Whether to enable the service.
+* `archives`: Whether to search the log archive file.
 * `mailto`: Recipient of the reports.
+* `mailfrom`: Name of the sender of the reports.
 * `range`: Time range to digest (use logwatch --range Help for details).
 * `detail`: Detail level of the analysis.
-* `service`: Which services to digest.
+* `services`: Which services to digest.
+* `customServices`: See below.
+* `extraFixup`: Arbitrary customization commands, added to the end of the fixupPhase.
 * `startAt`: When to run.
-* `journalCtlEntries`: What to watch (see below).
 
 ## Advanced usage
 
-The option `services.logwatch.journalCtlEntries` contains attribute sets with the following name-value-pairs:
+The option `services.logwatch.customServices` contains attribute sets with the following name-value-pairs:
 
 * `name`: The name of the journalctl service that is watched.
 * `title` (optional): The title of the section in the report.
@@ -70,7 +73,7 @@ logwatch-nix-gc-script = pkgs.writeShellApplication {
 ```
 
 ```nix
-services.logwatch.journalCtlEntries = [
+services.logwatch.customServices = [
   {
     name = "nix-gc";
     title = "Nix garbage collection";

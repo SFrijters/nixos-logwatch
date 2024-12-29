@@ -14,7 +14,7 @@
   packageConfig ? null,
 }:
 let
-  mkJournalctlEntry =
+  mkCustomService =
     {
       name,
       title ? null,
@@ -68,6 +68,8 @@ stdenvNoCC.mkDerivation {
     url = "https://git.code.sf.net/p/logwatch/git";
   };
 
+  strictDeps = true;
+
   nativeBuildInputs = [ makeWrapper ];
 
   patchPhase =
@@ -104,7 +106,7 @@ stdenvNoCC.mkDerivation {
       sh install_logwatch.sh
       cp ${confFile} $out/usr/share/logwatch/default.conf/logwatch.conf
     ''
-    + (lib.concatMapStrings mkJournalctlEntry packageConfig.journalctlEntries or []);
+    + (lib.concatMapStrings mkCustomService packageConfig.customServices or []);
 
   postFixup =
     ''

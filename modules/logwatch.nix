@@ -18,7 +18,7 @@ let
       range
       detail
       services
-      journalctlEntries
+      customServices
       extraFixup
       ;
   };
@@ -52,11 +52,13 @@ in
 {
   options.services.logwatch = {
     enable = lib.mkEnableOption "logwatch";
+
     startAt = lib.mkOption {
       default = "*-*-* 4:00:00";
       type = types.str;
       description = "When to run";
     };
+
     archives = lib.mkOption {
       default = true;
       type = types.bool;
@@ -91,7 +93,7 @@ in
       type = types.listOf types.str;
       description = "Which services to digest";
     };
-    journalctlEntries = lib.mkOption {
+    customServices = lib.mkOption {
       default = [ ];
       type = types.listOf types.attrs;
       description = "What to watch";
