@@ -40,7 +40,8 @@ let
 
   confFile = writeText "logwatch.conf" (mkConf packageConfig);
 
-  mkConf = c:
+  mkConf =
+    c:
     ''
       TmpDir = /tmp
       mailer = "${lib.getExe' postfix "sendmail"} -t"
@@ -49,7 +50,8 @@ let
       MailFrom = ${c.mailfrom or "Logwatch"}
       Range = ${c.range or "Yesterday"}
       Detail = ${c.detail or "Low"}
-    '' + lib.concatMapStrings (s: "Service = ${s}\n") (c.services or [ "All" ]);
+    ''
+    + lib.concatMapStrings (s: "Service = ${s}\n") (c.services or [ "All" ]);
 
   # For unstable versions: set rev not-null, for stable versions: set tag not-null
   rev = "607f7295353157c1600f56f07395b852cec2a97b";
@@ -106,7 +108,7 @@ stdenvNoCC.mkDerivation {
       sh install_logwatch.sh
       cp ${confFile} $out/usr/share/logwatch/default.conf/logwatch.conf
     ''
-    + (lib.concatMapStrings mkCustomService packageConfig.customServices or []);
+    + (lib.concatMapStrings mkCustomService packageConfig.customServices or [ ]);
 
   postFixup =
     ''
@@ -134,8 +136,9 @@ stdenvNoCC.mkDerivation {
             xz
           ]
         }" \
-        --set pathto_ifconfig  "${lib.getExe' nettools "ifconfig"}"
-    '' + packageConfig.extraFixup or "";
+        --set pathto_ifconfig "${lib.getExe' nettools "ifconfig"}"
+    ''
+    + packageConfig.extraFixup or "";
 
   meta.mainProgram = "logwatch";
 }

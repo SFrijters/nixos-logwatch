@@ -49,7 +49,10 @@
                 logwatch = {
                   enable = true;
                   range = "since 24 hours ago for those hours";
-                  services = [ "All" "-zz-network" ];
+                  services = [
+                    "All"
+                    "-zz-network"
+                  ];
                   customServices = [
                     {
                       name = "postfix";
