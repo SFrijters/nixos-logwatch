@@ -125,6 +125,12 @@
               print(text)
               if "2   Delivered" not in text:
                   raise Exception("Missing test '2   Delivered' in output of 'logwatch --output stdout'")
+
+              # Ensure we didn't send email along with the stdout
+              text = server.succeed("logwatch --output stdout")
+              print(text)
+              if "2   Delivered" not in text:
+                  raise Exception("Missing test '2   Delivered' in output of 'logwatch --output stdout'")
             '';
         };
       });
