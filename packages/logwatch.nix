@@ -21,6 +21,7 @@ let
       output ? "cat",
       unit ? null,
       script ? null,
+      ...
     }:
     ''
       echo Adding JournalCtl entry '${name}'
@@ -138,6 +139,7 @@ stdenvNoCC.mkDerivation {
         }" \
         --set pathto_ifconfig "${lib.getExe' nettools "ifconfig"}"
     ''
+    + (lib.concatMapStrings (cs: cs.extraFixup or "") (packageConfig.customServices or [ ]))
     + packageConfig.extraFixup or "";
 
   meta.mainProgram = "logwatch";

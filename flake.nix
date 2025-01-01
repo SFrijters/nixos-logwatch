@@ -57,6 +57,10 @@
                     {
                       name = "postfix";
                       output = "short";
+                      extraFixup = ''
+                        # Do not report postfix start
+                        sed -i '5234d' $out/usr/share/logwatch/scripts/services/postfix
+                      '';
                     }
                   ];
                   extraFixup = ''
@@ -102,6 +106,9 @@
 
               if "Network statistics" in mail:
                   raise Exception("Network statistics should have been disabled in 'services'")
+
+              if "Postfix start" in mail:
+                  raise Exception("Postfix start should have been disabled in 'extraFixup' for postfix")
 
               if "Uptime" not in mail:
                   raise Exception("Uptime should have been enabled in 'extraFixup'")
