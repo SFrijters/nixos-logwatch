@@ -59,7 +59,7 @@
                       output = "short";
                       extraFixup = ''
                         # Do not report postfix start
-                        sed -i '5234d' $out/usr/share/logwatch/scripts/services/postfix
+                        sed -i '5247d' $out/usr/share/logwatch/scripts/services/postfix
                       '';
                     }
                   ];
