@@ -31,12 +31,16 @@ in
 
     startAt = lib.mkOption {
       default = "*-*-* 4:00:00";
-      type = types.str;
+      type = with types; either singleLineStr (listOf singleLineStr);
+      example = [
+        "daily"
+        "*-*-* 12:00:00"
+      ];
       description = "When to run";
     };
     persistent = lib.mkOption {
       default = true;
-      type = lib.types.bool;
+      type = types.bool;
       example = false;
       description = ''
         Takes a boolean argument. If true, the time when the service
@@ -51,7 +55,7 @@ in
     };
     randomizedDelaySec = lib.mkOption {
       default = "0m";
-      type = lib.types.str;
+      type = types.singleLineStr;
       example = "12h";
       description = ''
         Add a randomized delay before each logwatch run.
@@ -72,27 +76,27 @@ in
     };
     mailto = lib.mkOption {
       default = "root";
-      type = types.str;
+      type = types.singleLineStr;
       description = "Recipient of the reports";
     };
     mailfrom = lib.mkOption {
       default = "Logwatch";
-      type = types.str;
+      type = types.singleLineStr;
       description = "Name of the sender of the reports";
     };
     range = lib.mkOption {
       default = "Yesterday";
-      type = types.str;
+      type = types.singleLineStr;
       description = "Time range to digest (use logwatch --range Help for details)";
     };
     detail = lib.mkOption {
       default = "Low";
-      type = types.str;
+      type = types.singleLineStr;
       description = "Detail level of the analysis";
     };
     services = lib.mkOption {
       default = [ "All" ];
-      type = types.listOf types.str;
+      type = types.listOf types.singleLineStr;
       description = "Which services to digest";
     };
     customServices = lib.mkOption {
@@ -123,7 +127,7 @@ in
       wantedBy = [ ];
       after = [ "network.target" ];
       timerConfig = {
-        OnCalendar = cfg.startAt;
+        OnCalendar = if builtins.isString cfg.startAt then [ cfg.startAt ] else cfg.startAt;
         Persistent = cfg.persistent;
         RandomizedDelaySec = cfg.randomizedDelaySec;
       };
