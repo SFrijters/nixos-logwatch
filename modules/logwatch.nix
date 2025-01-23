@@ -124,7 +124,7 @@ in
 
     systemd.timers.logwatch = {
       description = "Periodically digests the system logs";
-      wantedBy = [ ];
+      wantedBy = [ "timers.target" ];
       after = [ "network.target" ];
       timerConfig = {
         OnCalendar = if builtins.isString cfg.startAt then [ cfg.startAt ] else cfg.startAt;
