@@ -26,6 +26,13 @@ let
   logwatch = pkgs.callPackage ../packages/logwatch.nix { inherit packageConfig; };
 in
 {
+  imports = [
+    (lib.mkRenamedOptionModule
+      [ "services" "logwatch" "journalCtlEntries" ]
+      [ "services" "logwatch" "customServices" ]
+    )
+  ];
+
   options.services.logwatch = {
     enable = lib.mkEnableOption "logwatch";
 
