@@ -1,16 +1,27 @@
 {
-  pkgs,
+  stdenvNoCC,
   lib,
-  journalCtlEntries ? [ ],
+  fetchgit,
+  makeWrapper,
+  writeText,
+  perl,
+  perlPackages,
+  postfix,
+  nettools,
+  gzip,
+  bzip2,
+  xz,
+  packageConfig ? null,
 }:
 let
-  mkJournalCtlEntry =
+  mkCustomService =
     {
       name,
       title ? null,
       output ? "cat",
       unit ? null,
       script ? null,
+      ...
     }:
     ''
       echo Adding JournalCtl entry '${name}'
@@ -20,7 +31,7 @@ let
       Title = "${title}"\n
     ''
     + ''
-      LogFile =\nLogFile = logwatch-null\n*JournalCtl = "--output=${output} --unit=${
+      LogFile =\nLogFile = none\n*JournalCtl = "--output=${output} --unit=${
         if unit != null then unit else "${name}.service"
       }"\n' > $out/etc/logwatch/conf/services/${name}.conf
     ''
@@ -28,34 +39,53 @@ let
       cp ${script} $out/etc/logwatch/scripts/services/${name}
     '';
 
+  confFile = writeText "logwatch.conf" (mkConf packageConfig);
+
+  mkConf =
+    c:
+    ''
+      TmpDir = /tmp
+      mailer = "${lib.getExe' postfix "sendmail"} -t"
+      Archives = ${if c.archives or true then "Yes" else "No"}
+      MailTo = ${c.mailto or "root"}
+      MailFrom = ${c.mailfrom or "Logwatch"}
+      Range = ${c.range or "Yesterday"}
+      Detail = ${c.detail or "Low"}
+    ''
+    + lib.concatMapStrings (s: "Service = ${s}\n") (c.services or [ "All" ]);
+
   # For unstable versions: set rev not-null, for stable versions: set tag not-null
   rev = null;
-  tag = "7.11";
-  date = "2024-07-21";
+  tag = "7.12";
+  date = "2025-01-21";
+  hash = "sha256-PfBZ9GVyFBTVfW6KSOLa1Oi78R/RRepm9ansHcVRHI0=";
 in
-pkgs.stdenvNoCC.mkDerivation {
+stdenvNoCC.mkDerivation {
   pname = "logwatch";
   version =
     assert tag == null || rev == null;
     if tag != null then tag else "unstable-${date}";
 
-  src = pkgs.fetchgit {
+  src = fetchgit {
+    inherit hash rev tag;
     url = "https://git.code.sf.net/p/logwatch/git";
-    rev = if tag != null then "refs/tags/${tag}" else rev;
-    hash = "sha256-eD9upL2J00KcFAoKORV8sa6+L1y5h3WACYBDmJPo/sw=";
   };
 
-  nativeBuildInputs = [ pkgs.makeWrapper ];
+  strictDeps = true;
+
+  nativeBuildInputs = [ makeWrapper ];
 
   patchPhase =
     ''
+      runHook prePatch
+
       # Fix paths
       substituteInPlace install_logwatch.sh \
-        --replace-fail "/usr/share"      "$out/usr/share"          \
-        --replace-fail "/etc/logwatch"   "$out/etc/logwatch"       \
-        --replace-fail "/usr/bin/perl"   "${pkgs.perl}/bin/perl"   \
-        --replace-fail " perl "          " ${pkgs.perl}/bin/perl " \
-        --replace-fail "/usr/sbin"       "$out/bin"                \
+        --replace-fail "/usr/share"      "$out/usr/share"       \
+        --replace-fail "/etc/logwatch"   "$out/etc/logwatch"    \
+        --replace-fail "/usr/bin/perl"   "${lib.getExe perl}"   \
+        --replace-fail " perl "          " ${lib.getExe perl} " \
+        --replace-fail "/usr/sbin"       "$out/bin"             \
         --replace-fail "install -m 0755 -d \$TEMPDIR" ":"
     ''
     + lib.optionalString (tag == null) ''
@@ -65,59 +95,52 @@ pkgs.stdenvNoCC.mkDerivation {
         -e "s|^my \$Version = '.*';|my \$Version = '${rev}';|" \
         -e "s|^my \$VDate = '.*';|my \$VDate = '${date}';|" \
         scripts/logwatch.pl
+    ''
+    + ''
+      runHook postPatch
     '';
 
-  buildPhase = "";
+  dontConfigure = true;
+  dontBuild = true;
 
   installPhase =
     ''
       mkdir -p $out/bin
       sh install_logwatch.sh
-
-      # Null log necessary to be able to use journalctl
-      echo -e "LogFile = logwatch-null.log" > $out/etc/logwatch/conf/logfiles/logwatch-null.conf
+      cp ${confFile} $out/usr/share/logwatch/default.conf/logwatch.conf
     ''
-    + (lib.concatMapStrings mkJournalCtlEntry journalCtlEntries);
+    + (lib.concatMapStrings mkCustomService packageConfig.customServices or [ ]);
 
-  postFixup = ''
-    substituteInPlace $out/bin/logwatch \
-      --replace-fail "/usr/share"    "$out/usr/share"        \
-      --replace-fail "/etc/logwatch" "$out/etc/logwatch"     \
-      --replace-fail "/usr/bin/perl" "${pkgs.perl}/bin/perl" \
-      --replace-fail "/var/cache"    "/tmp"
+  postFixup =
+    ''
+      substituteInPlace $out/bin/logwatch \
+        --replace-fail "/usr/share"    "$out/usr/share"     \
+        --replace-fail "/etc/logwatch" "$out/etc/logwatch"  \
+        --replace-fail "/usr/bin/perl" "${lib.getExe perl}" \
+        --replace-fail "/var/cache"    "/tmp"
 
-    {
-        echo "TmpDir = /tmp/logwatch";
-        echo "mailer = \"${pkgs.postfix}/bin/sendmail -t\"";
-        echo "MailFrom = Logwatch"
-    } >> $out/usr/share/logwatch/default.conf/logwatch.conf
+      wrapProgram $out/bin/logwatch \
+        --prefix PERL5LIB : "${
+          with perlPackages;
+          makePerlPath [
+            DateManip
+            HTMLParser
+            SysCPU
+            SysMemInfo
+          ]
+        }" \
+        --prefix PATH : "${
+          lib.makeBinPath [
+            nettools
+            gzip
+            bzip2
+            xz
+          ]
+        }" \
+        --set pathto_ifconfig "${lib.getExe' nettools "ifconfig"}"
+    ''
+    + (lib.concatMapStrings (cs: cs.extraFixup or "") (packageConfig.customServices or [ ]))
+    + packageConfig.extraFixup or "";
 
-    # Enable runtime stats
-    substituteInPlace $out/usr/share/logwatch/default.conf/services/zz-runtime.conf \
-      --replace-fail '#$show_uptime = 0' '$show_uptime = 1'
-
-    # Do not show unmatched entries; getting all messages from journalctl unit 'session*' contains a lot more stuff than only sudo
-    substituteInPlace $out/usr/share/logwatch/scripts/services/sudo \
-      --replace-fail "if (keys %OtherList) {" "if (0) {"
-
-    wrapProgram $out/bin/logwatch \
-      --prefix PERL5LIB : "${
-        with pkgs.perlPackages;
-        makePerlPath [
-          DateManip
-          HTMLParser
-          SysCPU
-          SysMemInfo
-        ]
-      }" \
-      --prefix PATH : "${
-        lib.makeBinPath [
-          pkgs.nettools
-          pkgs.gzip
-          pkgs.bzip2
-          pkgs.xz
-        ]
-      }" \
-      --set pathto_ifconfig  "${pkgs.nettools}/bin/ifconfig"
-  '';
+  meta.mainProgram = "logwatch";
 }

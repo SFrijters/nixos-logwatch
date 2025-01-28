@@ -1,13 +1,13 @@
 # nixos-logwatch
 
-[![nix run](https://github.com/SFrijters/nixos-logwatch/actions/workflows/nix-run.yml/badge.svg)](https://github.com/SFrijters/nixos-logwatch/actions/workflows/nix-run.yml)
+[![nix flake check](https://github.com/SFrijters/nixos-logwatch/actions/workflows/nix-flake-check.yml/badge.svg)](https://github.com/SFrijters/nixos-logwatch/actions/workflows/nix-flake-check.yml)
 
 This flake provides a NixOS module for [logwatch](https://sourceforge.net/projects/logwatch/).
 
 It probably does not cover all use cases, as it has been lifted out of my personal configuration.
 Any suggestions or PR are welcome!
 
-The `master` branch of this repository packages [tagged logwatch releases](https://sourceforge.net/p/logwatch/git/ci/7.11/tree/) (currently 7.11), while the `unstable` branch will be updated more regularly following the [logwatch master branch](https://sourceforge.net/p/logwatch/git/ci/master/tree/).
+The `master` branch of this repository packages [tagged logwatch releases](https://sourceforge.net/p/logwatch/git/ci/7.12/tree/) (currently 7.12), while the `unstable` branch will be updated more regularly following the [logwatch master branch](https://sourceforge.net/p/logwatch/git/ci/master/tree/).
 
 ## Basic usage
 
@@ -31,7 +31,7 @@ In your configuration.nix:
 services.logwatch = {
   enable = true;
   range = "since 24 hours ago for those hours";
-  journalCtlEntries = [
+  customServices = [
     { name = "sshd"; }
     { name = "postfix"; output = "short"; }
     { name = "sudo"; unit = "session*"; }
@@ -40,23 +40,33 @@ services.logwatch = {
 ```
 
 Available options:
-* `enable`: Whether to enable the service.
-* `mailto`: Recipient of the reports.
-* `range`: Time range to digest (use logwatch --range Help for details).
-* `detail`: Detail level of the analysis.
-* `service`: Which services to digest.
-* `startAt`: When to run.
-* `journalCtlEntries`: What to watch (see below).
+
+* Service options:
+  * `enable`: Whether to enable the service.
+  * `startAt`: When to run. Defaults to `"*-*-* 4:00:00"`.
+  * `persistent`: Run the service to catch up if a trigger moment has been missed. Defaults to `true`.
+  * `randomizedDelaySec`: Randomized delay on top of the `startAt` time(s). Defaults to `"0m"`.
+
+* Logwatch options:
+  * `archives`: Use archived log files too. Defaults to `true`.
+  * `mailto`: Recipient of the reports. Defaults to `"root"`.
+  * `mailfrom`: Name of the sender of the reports. Defaults to `"Logwatch"`.
+  * `range`: Date range: Yesterday, Today, All, Help where help will describe additional options. Defaults to `"Yesterday"`.
+  * `detail`: Report Detail Level - High, Med, Low or any #. Defaults to `"Low"`.
+  * `services`: Which services to digest, by name. Defaults to `[ "All" ]`.
+  * `customServices`: See below.
+  * `extraFixup`: Arbitrary customization commands, added to the end of the fixupPhase.
 
 ## Advanced usage
 
-The option `services.logwatch.journalCtlEntries` contains attribute sets with the following name-value-pairs:
+The option `services.logwatch.customServices` contains attribute sets with the following name-value-pairs:
 
 * `name`: The name of the journalctl service that is watched.
 * `title` (optional): The title of the section in the report.
 * `output` (optional): Forwarded to the `--output` flag of journalctl. Defaults to `cat`.
 * `unit` (optional): Forwarded to the `--unit` flake of journalctl. Defaults to `${name}.service`.
 * `script` (optional): If the service does not have a script available in the logwatch package, you can provide your own here.
+* `extraFixup` (optional): Extra commands to run to fix up the logwatch package, e.g. tweak existing scripts.
 
 Example:
 
@@ -70,7 +80,7 @@ logwatch-nix-gc-script = pkgs.writeShellApplication {
 ```
 
 ```nix
-services.logwatch.journalCtlEntries = [
+services.logwatch.customServices = [
   {
     name = "nix-gc";
     title = "Nix garbage collection";
@@ -81,3 +91,5 @@ services.logwatch.journalCtlEntries = [
 ```
 
 Some useful / example scripts are provided as packages in this flake.
+
+If you are an advanced user, you can also get inspiration from the `check` in the flake.
