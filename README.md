@@ -41,16 +41,21 @@ services.logwatch = {
 
 Available options:
 
-* `enable`: Whether to enable the service.
-* `archives`: Whether to search the log archive file.
-* `mailto`: Recipient of the reports.
-* `mailfrom`: Name of the sender of the reports.
-* `range`: Time range to digest (use logwatch --range Help for details).
-* `detail`: Detail level of the analysis.
-* `services`: Which services to digest.
-* `customServices`: See below.
-* `extraFixup`: Arbitrary customization commands, added to the end of the fixupPhase.
-* `startAt`: When to run.
+* Service options:
+  * `enable`: Whether to enable the service.
+  * `startAt`: When to run. Defaults to `"*-*-* 4:00:00"`.
+  * `persistent`: Run the service to catch up if a trigger moment has been missed. Defaults to `true`.
+  * `randomizedDelaySec`: Randomized delay on top of the `startAt` time(s). Defaults to `"0m"`.
+
+* Logwatch options:
+  * `archives`: Use archived log files too. Defaults to `true`.
+  * `mailto`: Recipient of the reports. Defaults to `"root"`.
+  * `mailfrom`: Name of the sender of the reports. Defaults to `"Logwatch"`.
+  * `range`: Date range: Yesterday, Today, All, Help where help will describe additional options. Defaults to `"Yesterday"`.
+  * `detail`: Report Detail Level - High, Med, Low or any #. Defaults to `"Low"`.
+  * `services`: Which services to digest, by name. Defaults to `[ "All" ]`.
+  * `customServices`: See below.
+  * `extraFixup`: Arbitrary customization commands, added to the end of the fixupPhase.
 
 ## Advanced usage
 
