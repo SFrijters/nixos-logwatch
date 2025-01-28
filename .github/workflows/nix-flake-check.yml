@@ -2,9 +2,11 @@ name: "nix flake check"
 on:
   pull_request:
     paths-ignore:
+      - 'CHANGELOG.md'
       - 'README.md'
   push:
     paths-ignore:
+      - 'CHANGELOG.md'
       - 'README.md'
 
 jobs:
