@@ -4,6 +4,7 @@
   fetchgit,
   makeWrapper,
   writeText,
+  versionCheckHook,
   perl,
   perlPackages,
   postfix,
@@ -100,6 +101,7 @@ stdenvNoCC.mkDerivation {
       sed -i \
         -e "s|^my \$Version = '.*';|my \$Version = '${rev}';|" \
         -e "s|^my \$VDate = '.*';|my \$VDate = '${date}';|" \
+        -e "s|released \$VDate|unstable-\$VDate|" \
         scripts/logwatch.pl
     '';
 
@@ -145,6 +147,10 @@ stdenvNoCC.mkDerivation {
     ''
     + (lib.concatMapStrings (cs: cs.extraFixup or "") (packageConfig.customServices or [ ]))
     + packageConfig.extraFixup or "";
+
+  nativeInstallCheckInputs = [ versionCheckHook ];
+  versionCheckProgramArg = [ "--version" ];
+  doInstallCheck = true;
 
   meta.mainProgram = "logwatch";
 }
