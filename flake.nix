@@ -94,15 +94,15 @@
               print(mail)
               if "Subject: Logwatch for server" not in mail:
                   raise Exception("Missing text 'Subject: Logwatch for server' in output of 'mail -p'")
-              if "unstable" not in "${self.packages.${pkgs.system}.logwatch.version}":
-                  if "Logwatch ${self.packages.${pkgs.system}.logwatch.version}" not in mail:
+              if "unstable" not in "${self.packages.${system}.logwatch.version}":
+                  if "Logwatch ${self.packages.${system}.logwatch.version}" not in mail:
                       raise Exception("Missing text 'Logwatch ${
-                        self.packages.${pkgs.system}.logwatch.version
+                        self.packages.${system}.logwatch.version
                       } in output of 'mail -p'")
               else:
-                  if "Logwatch ${self.packages.${pkgs.system}.logwatch.src.rev}" not in mail:
+                  if "Logwatch ${self.packages.${system}.logwatch.src.rev}" not in mail:
                       raise Exception("Missing text 'Logwatch ${
-                        self.packages.${pkgs.system}.logwatch.src.rev
+                        self.packages.${system}.logwatch.src.rev
                       } in output of 'mail -p'")
 
               if "Network statistics" in mail:
