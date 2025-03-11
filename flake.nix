@@ -57,6 +57,7 @@
                     {
                       name = "postfix";
                       output = "short";
+                      preIgnore = "not set-gid|not owned by group";
                       extraFixup = ''
                         # Do not report postfix start
                         sed -i '5303d' $out/usr/share/logwatch/scripts/services/postfix
@@ -109,6 +110,15 @@
 
               if "Postfix start" in mail:
                   raise Exception("Postfix start should have been disabled in 'extraFixup' for postfix")
+
+              if "not set-gid" in mail:
+                  raise Exception("not set-gid warnings should have been filtered in 'preIgnore' for postfix")
+
+              if "not owned by group" in mail:
+                  raise Exception("not owned by group warnings should have been filtered in 'preIgnore' for postfix")
+
+              if not "group or other writable" in mail:
+                  raise Exception("group or other writable warnings should not have been filtered in 'preIgnore' for postfix")
 
               if "Uptime" not in mail:
                   raise Exception("Uptime should have been enabled in 'extraFixup'")

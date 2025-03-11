@@ -7,6 +7,7 @@
   perl,
   perlPackages,
   postfix,
+  gnugrep,
   nettools,
   gzip,
   bzip2,
@@ -21,6 +22,7 @@ let
       output ? "cat",
       unit ? null,
       script ? null,
+      preIgnore ? null,
       ...
     }:
     ''
@@ -33,7 +35,9 @@ let
     + ''
       LogFile =\nLogFile = none\n*JournalCtl = "--output=${output} --unit=${
         if unit != null then unit else "${name}.service"
-      }"\n' > $out/etc/logwatch/conf/services/${name}.conf
+      }"\n${
+        if preIgnore != null then "Pre_Ignore = \"${preIgnore}\"\n" else ""
+      }' > $out/etc/logwatch/conf/services/${name}.conf
     ''
     + lib.optionalString (script != null) ''
       cp ${script} $out/etc/logwatch/scripts/services/${name}
@@ -75,10 +79,12 @@ stdenvNoCC.mkDerivation {
 
   nativeBuildInputs = [ makeWrapper ];
 
-  patchPhase =
-    ''
-      runHook prePatch
+  patches = [
+    ./pre_ignore.patch
+  ];
 
+  postPatch =
+    ''
       # Fix paths
       substituteInPlace install_logwatch.sh \
         --replace-fail "/usr/share"      "$out/usr/share"       \
@@ -95,9 +101,6 @@ stdenvNoCC.mkDerivation {
         -e "s|^my \$Version = '.*';|my \$Version = '${rev}';|" \
         -e "s|^my \$VDate = '.*';|my \$VDate = '${date}';|" \
         scripts/logwatch.pl
-    ''
-    + ''
-      runHook postPatch
     '';
 
   dontConfigure = true;
@@ -131,6 +134,7 @@ stdenvNoCC.mkDerivation {
         }" \
         --prefix PATH : "${
           lib.makeBinPath [
+            gnugrep
             nettools
             gzip
             bzip2

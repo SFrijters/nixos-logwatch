@@ -66,6 +66,7 @@ The option `services.logwatch.customServices` contains attribute sets with the f
 * `output` (optional): Forwarded to the `--output` flag of journalctl. Defaults to `cat`.
 * `unit` (optional): Forwarded to the `--unit` flake of journalctl. Defaults to `${name}.service`.
 * `script` (optional): If the service does not have a script available in the logwatch package, you can provide your own here.
+* `preIgnore` (optional): Adds the Pre_Ignore setting to the config. Value should be a `grep -E` compatible regex.
 * `extraFixup` (optional): Extra commands to run to fix up the logwatch package, e.g. tweak existing scripts.
 
 Example:
