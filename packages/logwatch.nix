@@ -81,6 +81,7 @@ stdenvNoCC.mkDerivation {
   nativeBuildInputs = [ makeWrapper ];
 
   patches = [
+    # Add patch for pre_ignore with LogFile = none (i.e. JournalCtl)
     ./pre_ignore.patch
   ];
 
