@@ -57,10 +57,12 @@
                     {
                       name = "postfix";
                       output = "short";
-                      preIgnore = "not set-gid|not owned by group";
+                      # Use preIgnore and extraFixup for testing purposes
+                      preIgnore = "accepted";
                       extraFixup = ''
                         # Do not report postfix start
-                        sed -i '5303d' $out/usr/share/logwatch/scripts/services/postfix
+                        substituteInPlace $out/usr/share/logwatch/scripts/services/postfix \
+                          --replace-fail "add_section (\$S, 'postfixstart',                0, 'd', 'Postfix start');" ""
                       '';
                     }
                   ];
@@ -83,6 +85,12 @@
               import time
               start_all()
               server.wait_for_unit("default.target")
+
+              # Force restart of postfix so it logs an extra start/stop
+              # If we don't, the log will be empty because we remove postfixstart in extraFixup,
+              # and we get an error from the Perl script:
+              # "Can't use an undefined value as an ARRAY reference at [...]/logwatch/scripts/services/postfix line 1388, <> line 5."
+              server.systemctl("restart postfix")
 
               # Force restart of logwatch so it sends a mail
               server.systemctl("restart logwatch")
@@ -111,15 +119,6 @@
               if "Postfix start" in mail:
                   raise Exception("Postfix start should have been disabled in 'extraFixup' for postfix")
 
-              if "not set-gid" in mail:
-                  raise Exception("not set-gid warnings should have been filtered in 'preIgnore' for postfix")
-
-              if "not owned by group" in mail:
-                  raise Exception("not owned by group warnings should have been filtered in 'preIgnore' for postfix")
-
-              if not "group or other writable" in mail:
-                  raise Exception("group or other writable warnings should not have been filtered in 'preIgnore' for postfix")
-
               if "Uptime" not in mail:
                   raise Exception("Uptime should have been enabled in 'extraFixup'")
 
@@ -137,6 +136,12 @@
               print(mail)
               if "1   Delivered" not in mail:
                   raise Exception("Missing test '1   Delivered' in output of 'mail -p', should have been enabled in 'customServices'")
+
+              if "Bytes accepted" in mail:
+                  raise Exception("Bytes accepted should have been filtered in 'preIgnore' for postfix")
+
+              if not "Bytes delivered" in mail:
+                  raise Exception("Bytes delivered should not have been filtered in 'preIgnore' for postfix")
 
               text = server.succeed("logwatch --output stdout")
               print(text)
