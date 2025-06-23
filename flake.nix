@@ -72,7 +72,6 @@
                       range = "since 24 hours ago for those hours";
                       services = [
                         "All"
-                        "-logstash"
                         "-zz-network"
                       ];
                       customServices = [
