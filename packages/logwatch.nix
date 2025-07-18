@@ -48,9 +48,12 @@ let
 
   mkConf =
     c:
+    let
+      mailer = if (c.mailer or "") != "" then c.mailer else (lib.getExe' postfix "sendmail") + " -t";
+    in
     ''
       TmpDir = /tmp
-      mailer = "${lib.getExe' postfix "sendmail"} -t"
+      mailer = ${mailer}
       Archives = ${if c.archives or true then "Yes" else "No"}
       MailTo = ${c.mailto or "root"}
       MailFrom = ${c.mailfrom or "Logwatch"}
