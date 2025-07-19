@@ -69,6 +69,7 @@
                     postfix.enable = true;
                     logwatch = {
                       enable = true;
+                      # mailer = "${lib.getExe' pkgs.msmtp "sendmail"} -t";
                       range = "since 24 hours ago for those hours";
                       services = [
                         "All"
@@ -117,6 +118,9 @@
                   server.systemctl("restart logwatch")
                   # VMs on CI runners can be kind of slow, delay here
                   time.sleep(3)
+
+                  cfg = server.succeed("cat $(dirname $(readlink -f $(command -v logwatch)))/../usr/share/logwatch/default.conf/logwatch.conf")
+                  print(cfg)
 
                   # Get all mails for root and check if the expected data is there
                   mail = server.succeed("mail -p")

@@ -12,6 +12,7 @@ let
 
   packageConfig = {
     inherit (cfg)
+      mailer
       archives
       mailto
       mailfrom
@@ -69,6 +70,15 @@ in
         The delay will be chosen between zero and this value.
         This value must be a time span in the format specified by
         {manpage}`systemd.time(7)`
+      '';
+    };
+
+    mailer = lib.mkOption {
+      default = "${lib.getExe' pkgs.postfix "sendmail"} -t";
+      type = types.singleLineStr;
+      example = lib.literalExpression "${lib.getExe' pkgs.msmtp "sendmail"} -t";
+      description = ''
+        Set the 'mailer' command to be used by logwatch.
       '';
     };
 
