@@ -48,6 +48,7 @@ Available options:
   * `randomizedDelaySec`: Randomized delay on top of the `startAt` time(s). Defaults to `"0m"`.
 
 * Logwatch options:
+  * `mailer`: Which mailer command to use. Defaults to using postfix.
   * `archives`: Use archived log files too. Defaults to `true`.
   * `mailto`: Recipient of the reports. Defaults to `"root"`.
   * `mailfrom`: Name of the sender of the reports. Defaults to `"Logwatch"`.
