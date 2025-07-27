@@ -88,73 +88,76 @@ stdenvNoCC.mkDerivation {
     ./pre_ignore.patch
   ];
 
-  postPatch =
-    ''
-      # Fix paths
-      substituteInPlace install_logwatch.sh \
-        --replace-fail "/usr/share"      "$out/usr/share"       \
-        --replace-fail "/etc/logwatch"   "$out/etc/logwatch"    \
-        --replace-fail "/usr/bin/perl"   "${lib.getExe perl}"   \
-        --replace-fail " perl "          " ${lib.getExe perl} " \
-        --replace-fail "/usr/sbin"       "$out/bin"             \
-        --replace-fail "install -m 0755 -d \$TEMPDIR" ":"
-    ''
-    + lib.optionalString (tag == null) ''
-      # Set version
-      sed -i -e "s|^Version:.*|Version: ${rev}|" logwatch.spec
-      sed -i \
-        -e "s|^my \$Version = '.*';|my \$Version = '${rev}';|" \
-        -e "s|^my \$VDate = '.*';|my \$VDate = '${date}';|" \
-        -e "s|released \$VDate|unstable-\$VDate|" \
-        scripts/logwatch.pl
-    '';
+  postPatch = ''
+    # Fix paths
+    substituteInPlace install_logwatch.sh \
+      --replace-fail "/usr/share"      "$out/usr/share"       \
+      --replace-fail "/etc/logwatch"   "$out/etc/logwatch"    \
+      --replace-fail "/usr/bin/perl"   "${lib.getExe perl}"   \
+      --replace-fail " perl "          " ${lib.getExe perl} " \
+      --replace-fail "/usr/sbin"       "$out/bin"             \
+      --replace-fail "install -m 0755 -d \$TEMPDIR" ":"
+  ''
+  + lib.optionalString (tag == null) ''
+    # Set version
+    sed -i -e "s|^Version:.*|Version: ${rev}|" logwatch.spec
+    sed -i \
+      -e "s|^my \$Version = '.*';|my \$Version = '${rev}';|" \
+      -e "s|^my \$VDate = '.*';|my \$VDate = '${date}';|" \
+      -e "s|released \$VDate|unstable-\$VDate|" \
+      scripts/logwatch.pl
+  '';
 
   dontConfigure = true;
   dontBuild = true;
 
-  installPhase =
-    ''
-      runHook preInstall
-      mkdir -p $out/bin
-      sh install_logwatch.sh
-      cp ${confFile} $out/usr/share/logwatch/default.conf/logwatch.conf
-    ''
-    + (lib.concatMapStrings mkCustomService packageConfig.customServices or [ ]) +
-    ''
-      runHook postInstall
-    '';
+  installPhase = ''
+    runHook preInstall
+    mkdir -p $out/bin
+    sh install_logwatch.sh
+    cp ${confFile} $out/usr/share/logwatch/default.conf/logwatch.conf
+  ''
+  + (lib.concatMapStrings mkCustomService packageConfig.customServices or [ ])
+  + ''
+    runHook postInstall
+  '';
 
-  postFixup =
-    ''
-      substituteInPlace $out/bin/logwatch \
-        --replace-fail "/usr/share"    "$out/usr/share"     \
-        --replace-fail "/etc/logwatch" "$out/etc/logwatch"  \
-        --replace-fail "/usr/bin/perl" "${lib.getExe perl}" \
-        --replace-fail "/var/cache"    "/tmp"
+  postFixup = ''
+    substituteInPlace $out/bin/logwatch \
+      --replace-fail "/usr/share"    "$out/usr/share"     \
+      --replace-fail "/etc/logwatch" "$out/etc/logwatch"  \
+      --replace-fail "/usr/bin/perl" "${lib.getExe perl}" \
+      --replace-fail "/var/cache"    "/tmp"
 
-      wrapProgram $out/bin/logwatch \
-        --prefix PERL5LIB : "${
-          with perlPackages;
-          makePerlPath ([
+    wrapProgram $out/bin/logwatch \
+      --prefix PERL5LIB : "${
+        with perlPackages;
+        makePerlPath (
+          [
             DateManip
             HTMLParser
             SysCPU
             SysMemInfo
-          ] ++ packageConfig.extraPerl5Lib or [ ])
-        }" \
-        --prefix PATH : "${
-          lib.makeBinPath ([
+          ]
+          ++ packageConfig.extraPerl5Lib or [ ]
+        )
+      }" \
+      --prefix PATH : "${
+        lib.makeBinPath (
+          [
             gnugrep
             nettools
             gzip
             bzip2
             xz
-          ] ++ packageConfig.extraPath or [ ])
-        }" \
-        --set pathto_ifconfig "${lib.getExe' nettools "ifconfig"}"
-    ''
-    + (lib.concatMapStrings (cs: cs.extraFixup or "") (packageConfig.customServices or [ ]))
-    + packageConfig.extraFixup or "";
+          ]
+          ++ packageConfig.extraPath or [ ]
+        )
+      }" \
+      --set pathto_ifconfig "${lib.getExe' nettools "ifconfig"}"
+  ''
+  + (lib.concatMapStrings (cs: cs.extraFixup or "") (packageConfig.customServices or [ ]))
+  + packageConfig.extraFixup or "";
 
   nativeInstallCheckInputs = [ versionCheckHook ];
   versionCheckProgramArg = [ "--version" ];
