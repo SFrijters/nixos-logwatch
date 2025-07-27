@@ -12,6 +12,7 @@ let
 
   packageConfig = {
     inherit (cfg)
+      mailer
       archives
       mailto
       mailfrom
@@ -20,6 +21,8 @@ let
       services
       customServices
       extraFixup
+      extraPerl5Lib
+      extraPath
       ;
   };
 
@@ -72,6 +75,15 @@ in
       '';
     };
 
+    mailer = lib.mkOption {
+      default = "${lib.getExe' pkgs.postfix "sendmail"} -t";
+      type = types.singleLineStr;
+      example = lib.literalExpression "${lib.getExe' pkgs.msmtp "sendmail"} -t";
+      description = ''
+        Set the 'mailer' command to be used by logwatch.
+      '';
+    };
+
     archives = lib.mkOption {
       default = true;
       type = types.bool;
@@ -115,6 +127,16 @@ in
       default = "";
       type = types.str;
       description = "Arbitrary customization commands, added to the end of the fixupPhase";
+    };
+    extraPath = lib.mkOption {
+      default = [ ];
+      type = types.listOf types.package;
+      description = "List of packages to be added to the PATH for logwatch, in case any (custom) modules need them";
+    };
+    extraPerl5Lib = lib.mkOption {
+      default = [ ];
+      type = types.listOf types.package;
+      description = "List of packages to be added to the PERL5LIB path for logwatch, in case any (custom) modules need them";
     };
   };
 

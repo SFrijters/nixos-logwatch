@@ -4,9 +4,11 @@
   fetchgit,
   makeWrapper,
   writeText,
+  versionCheckHook,
   perl,
   perlPackages,
   postfix,
+  gnugrep,
   nettools,
   gzip,
   bzip2,
@@ -21,6 +23,7 @@ let
       output ? "cat",
       unit ? null,
       script ? null,
+      preIgnore ? null,
       ...
     }:
     ''
@@ -33,7 +36,9 @@ let
     + ''
       LogFile =\nLogFile = none\n*JournalCtl = "--output=${output} --unit=${
         if unit != null then unit else "${name}.service"
-      }"\n' > $out/etc/logwatch/conf/services/${name}.conf
+      }"\n${
+        if preIgnore != null then "Pre_Ignore = \"${preIgnore}\"\n" else ""
+      }' > $out/etc/logwatch/conf/services/${name}.conf
     ''
     + lib.optionalString (script != null) ''
       cp ${script} $out/etc/logwatch/scripts/services/${name}
@@ -43,9 +48,12 @@ let
 
   mkConf =
     c:
+    let
+      mailer = if (c.mailer or "") != "" then c.mailer else (lib.getExe' postfix "sendmail") + " -t";
+    in
     ''
       TmpDir = /tmp
-      mailer = "${lib.getExe' postfix "sendmail"} -t"
+      mailer = ${mailer}
       Archives = ${if c.archives or true then "Yes" else "No"}
       MailTo = ${c.mailto or "root"}
       MailFrom = ${c.mailfrom or "Logwatch"}
@@ -56,9 +64,9 @@ let
 
   # For unstable versions: set rev not-null, for stable versions: set tag not-null
   rev = null;
-  tag = "7.12";
-  date = "2025-01-21";
-  hash = "sha256-PfBZ9GVyFBTVfW6KSOLa1Oi78R/RRepm9ansHcVRHI0=";
+  tag = "7.13";
+  date = "2025-07-21";
+  hash = "sha256-QifeLmgebordNDdtWtNK/ZxIjAdftfjgni4f2OOm1hU=";
 in
 stdenvNoCC.mkDerivation {
   pname = "logwatch";
@@ -75,72 +83,85 @@ stdenvNoCC.mkDerivation {
 
   nativeBuildInputs = [ makeWrapper ];
 
-  patchPhase =
-    ''
-      runHook prePatch
+  patches = [
+    # Add patch for pre_ignore with LogFile = none (i.e. JournalCtl)
+    ./pre_ignore.patch
+  ];
 
-      # Fix paths
-      substituteInPlace install_logwatch.sh \
-        --replace-fail "/usr/share"      "$out/usr/share"       \
-        --replace-fail "/etc/logwatch"   "$out/etc/logwatch"    \
-        --replace-fail "/usr/bin/perl"   "${lib.getExe perl}"   \
-        --replace-fail " perl "          " ${lib.getExe perl} " \
-        --replace-fail "/usr/sbin"       "$out/bin"             \
-        --replace-fail "install -m 0755 -d \$TEMPDIR" ":"
-    ''
-    + lib.optionalString (tag == null) ''
-      # Set version
-      sed -i -e "s|^Version:.*|Version: ${rev}|" logwatch.spec
-      sed -i \
-        -e "s|^my \$Version = '.*';|my \$Version = '${rev}';|" \
-        -e "s|^my \$VDate = '.*';|my \$VDate = '${date}';|" \
-        scripts/logwatch.pl
-    ''
-    + ''
-      runHook postPatch
-    '';
+  postPatch = ''
+    # Fix paths
+    substituteInPlace install_logwatch.sh \
+      --replace-fail "/usr/share"      "$out/usr/share"       \
+      --replace-fail "/etc/logwatch"   "$out/etc/logwatch"    \
+      --replace-fail "/usr/bin/perl"   "${lib.getExe perl}"   \
+      --replace-fail " perl "          " ${lib.getExe perl} " \
+      --replace-fail "/usr/sbin"       "$out/bin"             \
+      --replace-fail "install -m 0755 -d \$TEMPDIR" ":"
+  ''
+  + lib.optionalString (tag == null) ''
+    # Set version
+    sed -i -e "s|^Version:.*|Version: ${rev}|" logwatch.spec
+    sed -i \
+      -e "s|^my \$Version = '.*';|my \$Version = '${rev}';|" \
+      -e "s|^my \$VDate = '.*';|my \$VDate = '${date}';|" \
+      -e "s|released \$VDate|unstable-\$VDate|" \
+      scripts/logwatch.pl
+  '';
 
   dontConfigure = true;
   dontBuild = true;
 
-  installPhase =
-    ''
-      mkdir -p $out/bin
-      sh install_logwatch.sh
-      cp ${confFile} $out/usr/share/logwatch/default.conf/logwatch.conf
-    ''
-    + (lib.concatMapStrings mkCustomService packageConfig.customServices or [ ]);
+  installPhase = ''
+    runHook preInstall
+    mkdir -p $out/bin
+    sh install_logwatch.sh
+    cp ${confFile} $out/usr/share/logwatch/default.conf/logwatch.conf
+  ''
+  + (lib.concatMapStrings mkCustomService packageConfig.customServices or [ ])
+  + ''
+    runHook postInstall
+  '';
 
-  postFixup =
-    ''
-      substituteInPlace $out/bin/logwatch \
-        --replace-fail "/usr/share"    "$out/usr/share"     \
-        --replace-fail "/etc/logwatch" "$out/etc/logwatch"  \
-        --replace-fail "/usr/bin/perl" "${lib.getExe perl}" \
-        --replace-fail "/var/cache"    "/tmp"
+  postFixup = ''
+    substituteInPlace $out/bin/logwatch \
+      --replace-fail "/usr/share"    "$out/usr/share"     \
+      --replace-fail "/etc/logwatch" "$out/etc/logwatch"  \
+      --replace-fail "/usr/bin/perl" "${lib.getExe perl}" \
+      --replace-fail "/var/cache"    "/tmp"
 
-      wrapProgram $out/bin/logwatch \
-        --prefix PERL5LIB : "${
-          with perlPackages;
-          makePerlPath [
+    wrapProgram $out/bin/logwatch \
+      --prefix PERL5LIB : "${
+        with perlPackages;
+        makePerlPath (
+          [
             DateManip
             HTMLParser
             SysCPU
             SysMemInfo
           ]
-        }" \
-        --prefix PATH : "${
-          lib.makeBinPath [
+          ++ packageConfig.extraPerl5Lib or [ ]
+        )
+      }" \
+      --prefix PATH : "${
+        lib.makeBinPath (
+          [
+            gnugrep
             nettools
             gzip
             bzip2
             xz
           ]
-        }" \
-        --set pathto_ifconfig "${lib.getExe' nettools "ifconfig"}"
-    ''
-    + (lib.concatMapStrings (cs: cs.extraFixup or "") (packageConfig.customServices or [ ]))
-    + packageConfig.extraFixup or "";
+          ++ packageConfig.extraPath or [ ]
+        )
+      }" \
+      --set pathto_ifconfig "${lib.getExe' nettools "ifconfig"}"
+  ''
+  + (lib.concatMapStrings (cs: cs.extraFixup or "") (packageConfig.customServices or [ ]))
+  + packageConfig.extraFixup or "";
+
+  nativeInstallCheckInputs = [ versionCheckHook ];
+  versionCheckProgramArg = [ "--version" ];
+  doInstallCheck = true;
 
   meta.mainProgram = "logwatch";
 }
