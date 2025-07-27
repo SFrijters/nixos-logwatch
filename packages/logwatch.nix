@@ -135,21 +135,21 @@ stdenvNoCC.mkDerivation {
       wrapProgram $out/bin/logwatch \
         --prefix PERL5LIB : "${
           with perlPackages;
-          makePerlPath [
+          makePerlPath ([
             DateManip
             HTMLParser
             SysCPU
             SysMemInfo
-          ]
+          ] ++ packageConfig.extraPerl5Lib or [ ])
         }" \
         --prefix PATH : "${
-          lib.makeBinPath [
+          lib.makeBinPath ([
             gnugrep
             nettools
             gzip
             bzip2
             xz
-          ]
+          ] ++ packageConfig.extraPath or [ ])
         }" \
         --set pathto_ifconfig "${lib.getExe' nettools "ifconfig"}"
     ''

@@ -57,6 +57,8 @@ Available options:
   * `services`: Which services to digest, by name. Defaults to `[ "All" ]`.
   * `customServices`: See below.
   * `extraFixup`: Arbitrary customization commands, added to the end of the fixupPhase.
+  * `extraPath`: List of packages to be added to PATH for logwatch, in case any (custom) modules need them. Defaults to the empty list.
+  * `extraPerl5Lib`: List of packages to be added to the PERL5LIB path for logwatch, in case any (custom) modules need them. Defaults to the empty list.
 
 ## Advanced usage
 
