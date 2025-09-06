@@ -63,10 +63,10 @@ let
     + lib.concatMapStrings (s: "Service = ${s}\n") (c.services or [ "All" ]);
 
   # For unstable versions: set rev not-null, for stable versions: set tag not-null
-  rev = "54e800ca668c29178b2628a5cc562d78cca58bb1";
+  rev = "d6bea6634eb1e3b59aa49fd5daf7d003fd6a0115";
   tag = null;
-  date = "2025-08-21";
-  hash = "sha256-cQdxsD9i72Hj0oZ0ZI5tVzK0PH1fw77z6WoT+D4N05c=";
+  date = "2025-08-26";
+  hash = "sha256-EVlXZiqM5NC9SLIdEuiehP/hUviAiI+0Ep63PYoHMB0=";
 in
 stdenvNoCC.mkDerivation {
   pname = "logwatch";
