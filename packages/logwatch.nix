@@ -74,6 +74,8 @@ stdenvNoCC.mkDerivation {
     assert tag == null || rev == null;
     if tag != null then tag else "unstable-${date}";
 
+  __structuredAttrs = true;
+
   src = fetchgit {
     inherit hash rev tag;
     url = "https://git.code.sf.net/p/logwatch/git";
