@@ -11,6 +11,7 @@
     }:
     let
       inherit (nixpkgs) lib;
+
       # Boilerplate to make the rest of the flake more readable
       # Do not inject system into these attributes
       flatAttrs = [
@@ -20,7 +21,7 @@
       # Inject a system attribute if the attribute is not one of the above
       injectSystem =
         system:
-        lib.mapAttrs (name: value: if builtins.elem name flatAttrs then value else { ${system} = value; });
+        lib.mapAttrs (name: value: if lib.elem name flatAttrs then value else { ${system} = value; });
       # Combine the above for a list of 'systems'
       forSystems =
         systems: f:

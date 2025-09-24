@@ -156,7 +156,7 @@ in
       wantedBy = [ "timers.target" ];
       after = [ "network.target" ];
       timerConfig = {
-        OnCalendar = if builtins.isString cfg.startAt then [ cfg.startAt ] else cfg.startAt;
+        OnCalendar = if lib.isString cfg.startAt then [ cfg.startAt ] else cfg.startAt;
         Persistent = cfg.persistent;
         RandomizedDelaySec = cfg.randomizedDelaySec;
       };
