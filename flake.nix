@@ -55,7 +55,7 @@
           };
 
           checks = {
-            default = pkgs.nixosTest {
+            default = pkgs.testers.nixosTest {
               name = "logwatch-module-test";
 
               nodes.server =
