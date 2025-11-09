@@ -9,7 +9,7 @@
   perlPackages,
   postfix,
   gnugrep,
-  nettools,
+  net-tools,
   gzip,
   bzip2,
   xz,
@@ -148,7 +148,7 @@ stdenvNoCC.mkDerivation {
         lib.makeBinPath (
           [
             gnugrep
-            nettools
+            net-tools
             gzip
             bzip2
             xz
@@ -156,7 +156,7 @@ stdenvNoCC.mkDerivation {
           ++ packageConfig.extraPath or [ ]
         )
       }" \
-      --set pathto_ifconfig "${lib.getExe' nettools "ifconfig"}"
+      --set pathto_ifconfig "${lib.getExe' net-tools "ifconfig"}"
   ''
   + (lib.concatMapStrings (cs: cs.extraFixup or "") (packageConfig.customServices or [ ]))
   + packageConfig.extraFixup or "";
