@@ -102,7 +102,7 @@
 
               testScript =
                 let
-                  inherit (pkgs) system;
+                  inherit (pkgs.stdenv.hostPlatform) system;
                 in
                 ''
                   import time
