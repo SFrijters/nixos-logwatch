@@ -75,7 +75,6 @@
                       services = [
                         "All"
                         "-zz-network"
-                        "-dnf5"
                       ];
                       customServices = [
                         {
