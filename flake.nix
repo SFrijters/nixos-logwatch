@@ -39,7 +39,7 @@
       (
         system:
         let
-          pkgs = import nixpkgs { inherit system; };
+          pkgs = nixpkgs.legacyPackages.${system};
         in
         {
           nixosModules.logwatch = import ./modules/logwatch.nix;
