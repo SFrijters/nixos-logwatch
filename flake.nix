@@ -120,7 +120,9 @@
                   # VMs on CI runners can be kind of slow, delay here
                   time.sleep(3)
 
-                  cfg = server.succeed("cat $(dirname $(readlink -f $(command -v logwatch)))/../usr/share/logwatch/default.conf/logwatch.conf")
+                  cfg_path = server.succeed("echo $(readlink -f $(dirname $(readlink -f $(command -v logwatch)))/../etc/logwatch/conf/logwatch.conf)")
+                  print(cfg_path)
+                  cfg = server.succeed("cat $(readlink -f $(dirname $(readlink -f $(command -v logwatch)))/../etc/logwatch/conf/logwatch.conf)")
                   print(cfg)
 
                   # Get all mails for root and check if the expected data is there

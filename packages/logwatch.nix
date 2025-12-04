@@ -117,7 +117,7 @@ stdenvNoCC.mkDerivation {
     runHook preInstall
     mkdir -p $out/bin
     sh install_logwatch.sh
-    cp ${confFile} $out/usr/share/logwatch/default.conf/logwatch.conf
+    cp ${confFile} $out/etc/logwatch/conf/logwatch.conf
   ''
   + (lib.concatMapStrings mkCustomService packageConfig.customServices or [ ])
   + ''
