@@ -38,6 +38,10 @@ in
       [ "services" "logwatch" "journalCtlEntries" ]
       [ "services" "logwatch" "customServices" ]
     )
+    (lib.mkRemovedOptionModule
+      [ "services" "logwatch" "extraFixup" ]
+      "Use extraFixup or extraConfig for services, or override the unwrapped logwatch package instead"
+    )
   ];
 
   options.services.logwatch = {
