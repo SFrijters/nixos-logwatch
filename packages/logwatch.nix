@@ -127,7 +127,7 @@ stdenvNoCC.mkDerivation {
   postFixup = ''
     substituteInPlace $out/bin/logwatch \
       --replace-fail "/usr/share"    "$out/usr/share"     \
-      --replace-fail "/etc/logwatch" "$out/etc/logwatch"  \
+      --replace-fail '"/etc/logwatch"' "\$ENV{'NIX_LOGWATCH_CONF_PATH'} ? \$ENV{'NIX_LOGWATCH_CONF_PATH'} : \"$out/etc/logwatch\"" \
       --replace-fail "/usr/bin/perl" "${lib.getExe perl}" \
       --replace-fail "/var/cache"    "/tmp"
 
