@@ -1,5 +1,8 @@
 final: prev: {
-  logwatch = final.callPackage ./packages/logwatch.nix { };
+  logwatch-unwrapped = final.callPackage ./packages/logwatch-unwrapped/package.nix { };
+  logwatch = final.callPackage ./packages/logwatch/package.nix {
+    inherit (final) logwatch-unwrapped;
+  };
 
   logwatch-scripts = final.lib.makeScope final.newScope (self: {
     passthrough = self.callPackage ./packages/logwatch-scripts/passthrough.nix { };

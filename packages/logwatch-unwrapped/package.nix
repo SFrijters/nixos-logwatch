@@ -3,65 +3,16 @@
   lib,
   fetchgit,
   makeWrapper,
-  writeText,
   versionCheckHook,
   perl,
   perlPackages,
-  postfix,
   gnugrep,
   net-tools,
   gzip,
   bzip2,
   xz,
-  packageConfig ? null,
 }:
 let
-  mkCustomService =
-    {
-      name,
-      title ? null,
-      output ? "cat",
-      unit ? null,
-      script ? null,
-      preIgnore ? null,
-      ...
-    }:
-    ''
-      echo Adding JournalCtl entry '${name}'
-    ''
-    + "echo -e '"
-    + lib.optionalString (title != null) ''
-      Title = "${title}"\n
-    ''
-    + ''
-      LogFile =\nLogFile = none\n*JournalCtl = "--output=${output} --unit=${
-        if unit != null then unit else "${name}.service"
-      }"\n${
-        if preIgnore != null then "Pre_Ignore = \"${preIgnore}\"\n" else ""
-      }' > $out/etc/logwatch/conf/services/${name}.conf
-    ''
-    + lib.optionalString (script != null) ''
-      cp ${script} $out/etc/logwatch/scripts/services/${name}
-    '';
-
-  confFile = writeText "logwatch.conf" (mkConf packageConfig);
-
-  mkConf =
-    c:
-    let
-      mailer = if (c.mailer or "") != "" then c.mailer else (lib.getExe' postfix "sendmail") + " -t";
-    in
-    ''
-      TmpDir = /tmp
-      mailer = ${mailer}
-      Archives = ${if c.archives or true then "Yes" else "No"}
-      MailTo = ${c.mailto or "root"}
-      MailFrom = ${c.mailfrom or "Logwatch"}
-      Range = ${c.range or "Yesterday"}
-      Detail = ${c.detail or "Low"}
-    ''
-    + lib.concatMapStrings (s: "Service = ${s}\n") (c.services or [ "All" ]);
-
   # For unstable versions: set rev not-null, for stable versions: set tag not-null
   rev = "606b93e15e2e6830848613f7816c5fb4ec0f885c";
   tag = null;
@@ -115,12 +66,10 @@ stdenvNoCC.mkDerivation {
 
   installPhase = ''
     runHook preInstall
+
     mkdir -p $out/bin
     sh install_logwatch.sh
-    cp ${confFile} $out/etc/logwatch/conf/logwatch.conf
-  ''
-  + (lib.concatMapStrings mkCustomService packageConfig.customServices or [ ])
-  + ''
+
     runHook postInstall
   '';
 
@@ -134,32 +83,24 @@ stdenvNoCC.mkDerivation {
     wrapProgram $out/bin/logwatch \
       --prefix PERL5LIB : "${
         with perlPackages;
-        makePerlPath (
-          [
-            DateManip
-            HTMLParser
-            SysCPU
-            SysMemInfo
-          ]
-          ++ packageConfig.extraPerl5Lib or [ ]
-        )
+        makePerlPath [
+          DateManip
+          HTMLParser
+          SysCPU
+          SysMemInfo
+        ]
       }" \
       --prefix PATH : "${
-        lib.makeBinPath (
-          [
-            gnugrep
-            net-tools
-            gzip
-            bzip2
-            xz
-          ]
-          ++ packageConfig.extraPath or [ ]
-        )
+        lib.makeBinPath [
+          gnugrep
+          net-tools
+          gzip
+          bzip2
+          xz
+        ]
       }" \
       --set pathto_ifconfig "${lib.getExe' net-tools "ifconfig"}"
-  ''
-  + (lib.concatMapStrings (cs: cs.extraFixup or "") (packageConfig.customServices or [ ]))
-  + packageConfig.extraFixup or "";
+  '';
 
   nativeInstallCheckInputs = [ versionCheckHook ];
   versionCheckProgramArg = [ "--version" ];

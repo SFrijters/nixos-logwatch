@@ -30,10 +30,11 @@ jobs:
     - name: Run logwatch
       run: |
         nix run . -- --version
+        nix run .#logwatch-unwrapped -- --version
 
     - name: Build from overlay without flake
       run: |
-        for p in logwatch logwatch-scripts.passthrough logwatch-scripts.nix-gc logwatch-scripts.nixos-upgrade; do
+        for p in logwatch-unwrapped logwatch logwatch-scripts.passthrough logwatch-scripts.nix-gc logwatch-scripts.nixos-upgrade; do
           NIX_PATH=$NIX_PATH:nixpkgs-overlays=$(pwd)/overlays.nix \
           nix-build \
             https://github.com/NixOS/nixpkgs/archive/$(grep rev flake.lock | sed 's/^.*: //' | sed -e 's/"//g' -e 's/,//').tar.gz \
@@ -42,5 +43,5 @@ jobs:
 
     - name: Formatter check
       run: |
-        nix fmt
-        git diff --exit-code
+        nix fmt -- --version
+        nix fmt -- -vv --tree-root-file flake.nix --ci

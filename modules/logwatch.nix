@@ -10,23 +10,27 @@ let
   cfg = config.services.logwatch;
   types = lib.types;
 
-  packageConfig = {
+  extraConfig = {
     inherit (cfg)
-      mailer
       archives
+      mailer
       mailto
       mailfrom
       range
       detail
       services
-      customServices
-      extraFixup
-      extraPerl5Lib
-      extraPath
       ;
   };
 
-  logwatch = pkgs.callPackage ../packages/logwatch.nix { inherit packageConfig; };
+  defaultPackage = pkgs.callPackage ../packages/logwatch/package.nix {
+    logwatch-unwrapped = pkgs.callPackage ../packages/logwatch-unwrapped/package.nix { };
+    inherit extraConfig;
+    inherit (cfg)
+      customServices
+      extraPath
+      extraPerl5Lib
+      ;
+  };
 in
 {
   imports = [
@@ -38,6 +42,14 @@ in
 
   options.services.logwatch = {
     enable = lib.mkEnableOption "logwatch";
+
+    package = lib.mkOption {
+      type = lib.types.package;
+      default = defaultPackage;
+      description = ''
+        Which package to use for logwatch.
+      '';
+    };
 
     startAt = lib.mkOption {
       default = "*-*-* 4:00:00";
@@ -123,11 +135,6 @@ in
       type = types.listOf types.attrs;
       description = "What to watch";
     };
-    extraFixup = lib.mkOption {
-      default = "";
-      type = types.str;
-      description = "Arbitrary customization commands, added to the end of the fixupPhase";
-    };
     extraPath = lib.mkOption {
       default = [ ];
       type = types.listOf types.package;
@@ -141,12 +148,12 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    environment.systemPackages = [ logwatch ];
+    environment.systemPackages = [ cfg.package ];
     systemd.services.logwatch = {
       description = "Digests the system logs";
       serviceConfig = {
         Type = "oneshot";
-        ExecStart = ''${lib.getExe logwatch} --output mail'';
+        ExecStart = ''${lib.getExe cfg.package} --output mail'';
         PrivateTmp = true;
       };
     };
