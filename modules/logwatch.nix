@@ -158,7 +158,7 @@ in
       description = "Digests the system logs";
       serviceConfig = {
         Type = "oneshot";
-        ExecStart = ''${lib.getExe cfg.package} --output mail'';
+        ExecStart = "${lib.getExe cfg.package} --output mail";
         PrivateTmp = true;
       };
     };

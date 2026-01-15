@@ -58,14 +58,14 @@ let
         TmpDir = /tmp
       ''
       + lib.optionalString (config != null) ''
-        ${lib.optionalString (config.mailer != null) ''mailer = ${config.mailer}''}
+        ${lib.optionalString (config.mailer != null) "mailer = ${config.mailer}"}
         ${lib.optionalString (config.archives != null)
-          ''Archives = ${if config.archives then "Yes" else "No"}''
+          "Archives = ${if config.archives then "Yes" else "No"}"
         }
-        ${lib.optionalString (config.mailto != null) ''MailTo = ${config.mailto}''}
-        ${lib.optionalString (config.mailfrom != null) ''MailFrom = ${config.mailfrom}''}
-        ${lib.optionalString (config.range != null) ''Range = ${config.range}''}
-        ${lib.optionalString (config.detail != null) ''Detail = ${config.detail}''}
+        ${lib.optionalString (config.mailto != null) "MailTo = ${config.mailto}"}
+        ${lib.optionalString (config.mailfrom != null) "MailFrom = ${config.mailfrom}"}
+        ${lib.optionalString (config.range != null) "Range = ${config.range}"}
+        ${lib.optionalString (config.detail != null) "Detail = ${config.detail}"}
       ''
       + lib.concatMapStrings (s: "Service = ${s}\n") (config.services or [ ])
     );
