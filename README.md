@@ -11,21 +11,21 @@ The `master` branch of this repository packages [tagged logwatch releases](https
 
 ## Basic usage
 
-In your flake.nix: add this flake to your inputs:
+In your `flake.nix`: add this flake to your inputs:
 
 ```nix
 inputs = {
   ...
   nixos-logwatch = {
     url = "github:SFrijters/nixos-logwatch";
-    inputs.nixpkgs.follows = "nixpkgs";  # It's probably best to follow your existing nixpkgs
+    inputs.nixpkgs.follows = "nixpkgs"; # It's probably best to follow your existing nixpkgs
   };
 };
 ```
 
 and add `nixos-logwatch.nixosModules.logwatch` to your modules.
 
-In your configuration.nix:
+In your `configuration.nix`:
 
 ```nix
 services.logwatch = {
