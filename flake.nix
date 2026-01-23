@@ -11,6 +11,7 @@
     }:
     let
       inherit (nixpkgs) lib;
+
       # Boilerplate to make the rest of the flake more readable
       # Do not inject system into these attributes
       flatAttrs = [
@@ -20,7 +21,7 @@
       # Inject a system attribute if the attribute is not one of the above
       injectSystem =
         system:
-        lib.mapAttrs (name: value: if builtins.elem name flatAttrs then value else { ${system} = value; });
+        lib.mapAttrs (name: value: if lib.elem name flatAttrs then value else { ${system} = value; });
       # Combine the above for a list of 'systems'
       forSystems =
         systems: f:
@@ -38,7 +39,7 @@
       (
         system:
         let
-          pkgs = import nixpkgs { inherit system; };
+          pkgs = nixpkgs.legacyPackages.${system};
         in
         {
           nixosModules.logwatch = import ./modules/logwatch.nix;
@@ -47,14 +48,15 @@
 
           packages = rec {
             default = logwatch;
-            logwatch = pkgs.callPackage ./packages/logwatch.nix { };
+            logwatch-unwrapped = pkgs.callPackage ./packages/logwatch-unwrapped/package.nix { };
+            logwatch = pkgs.callPackage ./packages/logwatch/package.nix { inherit logwatch-unwrapped; };
             passthrough-script = pkgs.callPackage ./packages/logwatch-scripts/passthrough.nix { };
             nix-gc-script = pkgs.callPackage ./packages/logwatch-scripts/nix-gc.nix { };
             nixos-upgrade-script = pkgs.callPackage ./packages/logwatch-scripts/nixos-upgrade.nix { };
           };
 
           checks = {
-            default = pkgs.nixosTest {
+            default = pkgs.testers.nixosTest {
               name = "logwatch-module-test";
 
               nodes.server =
@@ -83,16 +85,17 @@
                           preIgnore = "accepted";
                           extraFixup = ''
                             # Do not report postfix start
-                            substituteInPlace $out/usr/share/logwatch/scripts/services/postfix \
+                            substituteInPlace $out/scripts/services/postfix \
                               --replace-fail "add_section (\$S, 'postfixstart',                0, 'd', 'Postfix start');" ""
                           '';
                         }
+                        {
+                          name = "zz-runtime";
+                          extraConfig = ''
+                            $show_uptime = 1
+                          '';
+                        }
                       ];
-                      extraFixup = ''
-                        # Enable runtime stats
-                        substituteInPlace $out/usr/share/logwatch/default.conf/services/zz-runtime.conf \
-                          --replace-fail '#$show_uptime = 0' '$show_uptime = 1'
-                      '';
                     };
                   };
 
@@ -101,7 +104,10 @@
 
               testScript =
                 let
-                  inherit (pkgs) system;
+                  inherit (pkgs.stdenv.hostPlatform) system;
+                  inherit (self.packages.${system}) logwatch-unwrapped;
+                  inherit (logwatch-unwrapped) version;
+                  inherit (logwatch-unwrapped.src) rev;
                 in
                 ''
                   import time
@@ -119,24 +125,20 @@
                   # VMs on CI runners can be kind of slow, delay here
                   time.sleep(3)
 
-                  cfg = server.succeed("cat $(dirname $(readlink -f $(command -v logwatch)))/../usr/share/logwatch/default.conf/logwatch.conf")
-                  print(cfg)
+                  logwatch = server.succeed("readlink -f $(command -v logwatch)")
+                  print(logwatch)
 
                   # Get all mails for root and check if the expected data is there
                   mail = server.succeed("mail -p")
                   print(mail)
                   if "Subject: Logwatch for server" not in mail:
                       raise Exception("Missing text 'Subject: Logwatch for server' in output of 'mail -p'")
-                  if "unstable" not in "${self.packages.${system}.logwatch.version}":
-                      if "Logwatch ${self.packages.${system}.logwatch.version}" not in mail:
-                          raise Exception("Missing text 'Logwatch ${
-                            self.packages.${system}.logwatch.version
-                          } in output of 'mail -p'")
+                  if "unstable" not in "${version}":
+                      if "Logwatch ${version}" not in mail:
+                          raise Exception("Missing text 'Logwatch ${version} in output of 'mail -p'")
                   else:
-                      if "Logwatch ${self.packages.${system}.logwatch.src.rev}" not in mail:
-                          raise Exception("Missing text 'Logwatch ${
-                            self.packages.${system}.logwatch.src.rev
-                          } in output of 'mail -p'")
+                      if "Logwatch ${rev}" not in mail:
+                          raise Exception("Missing text 'Logwatch ${rev} in output of 'mail -p'")
 
                   if "Network statistics" in mail:
                       raise Exception("Network statistics should have been disabled in 'services'")
