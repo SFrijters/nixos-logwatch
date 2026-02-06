@@ -66,6 +66,7 @@ let
         ${lib.optionalString (config.mailfrom != null) "MailFrom = ${config.mailfrom}"}
         ${lib.optionalString (config.range != null) "Range = ${config.range}"}
         ${lib.optionalString (config.detail != null) "Detail = ${config.detail}"}
+        ${lib.optionalString (config.format != null) "Format = ${config.format}"}
       ''
       + lib.concatMapStrings (s: "Service = ${s}\n") (config.services or [ ])
     );

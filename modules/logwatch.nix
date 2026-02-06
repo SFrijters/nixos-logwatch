@@ -18,6 +18,7 @@ let
       mailfrom
       range
       detail
+      format
       services
       ;
   };
@@ -129,6 +130,11 @@ in
       default = "Low";
       type = types.singleLineStr;
       description = "Detail level of the analysis";
+    };
+    format = lib.mkOption {
+      default = "text";
+      type = types.singleLineStr;
+      description = "Format of the report";
     };
     services = lib.mkOption {
       default = [ "All" ];
