@@ -55,6 +55,7 @@ Available options:
   * `mailfrom`: Name of the sender of the reports. Defaults to `"Logwatch"`.
   * `range`: Date range: Yesterday, Today, All, Help where help will describe additional options. Defaults to `"Yesterday"`.
   * `detail`: Report Detail Level - High, Med, Low or any #. Defaults to `"Low"`.
+  * `format`: Report format - text or html. Defaults to `"text"`.
   * `services`: Which services to digest, by name. Defaults to `[ "All" ]`.
 
 * Additional logwatch configuration options:
