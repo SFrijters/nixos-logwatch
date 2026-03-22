@@ -14,10 +14,10 @@
 }:
 let
   # For unstable versions: set rev not-null, for stable versions: set tag not-null
-  rev = "8f9995bc9af6d47ff1abd98462c9b934f9dd79c6";
+  rev = "9fab253d061ac1e68f019c31ef1d29fdcef38cd8";
   tag = null;
-  date = "2026-03-03";
-  hash = "sha256-S6BPK9VzZgSnAloSKFgzudxog2wlGj3IIaIpR2iBEYY=";
+  date = "2026-03-14";
+  hash = "sha256-m9sjgYi7OO+e/klnz2Q10Hxcucv/KO08O3A2HXbrdr4=";
 in
 stdenvNoCC.mkDerivation {
   pname = "logwatch";
