@@ -25,8 +25,6 @@ stdenvNoCC.mkDerivation {
     assert tag == null || rev == null;
     if tag != null then tag else "unstable-${date}";
 
-  __structuredAttrs = true;
-
   src = fetchgit {
     inherit hash rev tag;
     url = "https://git.code.sf.net/p/logwatch/git";
@@ -106,5 +104,17 @@ stdenvNoCC.mkDerivation {
   versionCheckProgramArg = [ "--version" ];
   doInstallCheck = true;
 
-  meta.mainProgram = "logwatch";
+  __structuredAttrs = true;
+
+  meta = {
+    description = "A customizable log analysis system";
+    longDescription = ''
+      A customizable log analysis system. Logwatch parses through your system's logs and creates a report analyzing areas that you specify.
+      Logwatch is easy to use and will work right out of the package on most systems.
+    '';
+    homepage = "https://sourceforge.net/projects/logwatch/";
+    maintainers = with lib.maintainers; [ sfrijters ];
+    license = with lib.licenses; [ mit ];
+    mainProgram = "logwatch";
+  };
 }
