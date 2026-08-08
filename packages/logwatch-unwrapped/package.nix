@@ -14,10 +14,10 @@
 }:
 let
   # For unstable versions: set rev not-null, for stable versions: set tag not-null
-  rev = "64b5d47efdffadaf4519ee18e1f349b96a94a56f";
-  tag = null;
-  date = "2026-06-05";
-  hash = "sha256-b/op+2hcz+8WbqulpY9cixLKaaP7W6UE64fh0OPdK3E=";
+  rev = null;
+  tag = "7.15";
+  date = "2026-07-22";
+  hash = "sha256-4onFPfL+3UwjSKH93Uuwx3//YWpmJtvWY/bJDiGUU3M=";
 in
 stdenvNoCC.mkDerivation {
   pname = "logwatch";
@@ -46,7 +46,7 @@ stdenvNoCC.mkDerivation {
       --replace-fail "/etc/logwatch"   "$out/etc/logwatch"    \
       --replace-fail "/usr/bin/perl"   "${lib.getExe perl}"   \
       --replace-fail " perl "          " ${lib.getExe perl} " \
-      --replace-fail "/usr/sbin"       "$out/bin"             \
+      --replace-fail "/usr/bin"        "$out/bin"             \
       --replace-fail "install -m 0755 -d \$TEMPDIR" ":"
   ''
   + lib.optionalString (tag == null) ''
