@@ -15,17 +15,15 @@
 let
   # For unstable versions: set rev not-null, for stable versions: set tag not-null
   rev = null;
-  tag = "7.14";
-  date = "2026-01-22";
-  hash = "sha256-DidOT2GUpJqhiuLrbZNGjdl8IEhKtJK81EGgQDogdck=";
+  tag = "7.15";
+  date = "2026-07-22";
+  hash = "sha256-4onFPfL+3UwjSKH93Uuwx3//YWpmJtvWY/bJDiGUU3M=";
 in
 stdenvNoCC.mkDerivation {
   pname = "logwatch";
   version =
     assert tag == null || rev == null;
     if tag != null then tag else "unstable-${date}";
-
-  __structuredAttrs = true;
 
   src = fetchgit {
     inherit hash rev tag;
@@ -48,7 +46,7 @@ stdenvNoCC.mkDerivation {
       --replace-fail "/etc/logwatch"   "$out/etc/logwatch"    \
       --replace-fail "/usr/bin/perl"   "${lib.getExe perl}"   \
       --replace-fail " perl "          " ${lib.getExe perl} " \
-      --replace-fail "/usr/sbin"       "$out/bin"             \
+      --replace-fail "/usr/bin"        "$out/bin"             \
       --replace-fail "install -m 0755 -d \$TEMPDIR" ":"
   ''
   + lib.optionalString (tag == null) ''
@@ -106,5 +104,17 @@ stdenvNoCC.mkDerivation {
   versionCheckProgramArg = [ "--version" ];
   doInstallCheck = true;
 
-  meta.mainProgram = "logwatch";
+  __structuredAttrs = true;
+
+  meta = {
+    description = "A customizable log analysis system";
+    longDescription = ''
+      A customizable log analysis system. Logwatch parses through your system's logs and creates a report analyzing areas that you specify.
+      Logwatch is easy to use and will work right out of the package on most systems.
+    '';
+    homepage = "https://sourceforge.net/projects/logwatch/";
+    maintainers = with lib.maintainers; [ sfrijters ];
+    license = with lib.licenses; [ mit ];
+    mainProgram = "logwatch";
+  };
 }
